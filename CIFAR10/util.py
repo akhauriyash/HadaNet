@@ -14,7 +14,7 @@ from torch._thnn import type2backend
 from torch.nn.modules.utils import _pair
 
 
-def binabs(input):
+def binActive(input):
     binAgg          =   16
     shape           =   input.size()
     restore         =   0
@@ -50,7 +50,7 @@ def binabs(input):
     return output
 
 
-def bingradupd(input):
+def binAbs(input):
     binAgg          =   16
     shape           =   input.size()
     restore         =   0
@@ -137,7 +137,7 @@ class BinOp():
         for index in range(self.num_of_params):
             n      =   self.target_modules[index].data[0].nelement()
             s      =   self.target_modules[index].data.size()
-            m      =   binabs(self.target_modules[index].data)
+            m      =   binActive(self.target_modules[index].data)
             self.target_modules[index].data = m
 
  
@@ -152,7 +152,7 @@ class BinOp():
             binAgg = 16
             n      = weight[0].nelement()
             s 	   = weight.size()
-            m      = bingradupd(weight)
+            m      = binAbs(weight)
             m[weight.lt(-1.0)] = 0 
             m[weight.gt(1.0)] = 0
             m      = m.mul(self.target_modules[index].grad.data)
@@ -176,7 +176,7 @@ class BinOp():
 
 
 
-# def binabs(input):
+# def binActive(input):
 #     binAgg  =   16
 #     shape   =   input.size()
 #     restore = 0
