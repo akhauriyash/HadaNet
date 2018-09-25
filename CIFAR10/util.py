@@ -86,7 +86,7 @@ class BinOp():
     def __init__(self, model):
         count_Layers = 0
         for m in model.modules():
-            if isinstance(m, nn.Conv2d) or isintance(m, nn.Linear):
+            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
                 count_Layers += 1
         start_range           = 1
         end_range             = count_Layers-2

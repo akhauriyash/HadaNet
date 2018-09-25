@@ -64,7 +64,7 @@ def test():
     correct          = float(correct)
     bin_op.restore()
     acc              = 100*float(correct)/float(len(testloader.dataset))
-    test_loss        /= float(len(testloader.dataset))
+    test_loss       /= float(len(testloader.dataset))
 
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({}%)'.format(
         test_loss * 128, correct, len(testloader.dataset),
@@ -78,17 +78,22 @@ def test():
     return
 
 def adjust_learning_rate(optimizer, epoch):
-    update_list = [120, 200, 240, 280]
+    update_list = [60, 120, 200, 240, 280]
     if epoch in update_list:
         for param_group in optimizer.param_groups:
-            param_group['lr'] = param_group['lr'] * 0.1
+            param_group['lr'] = param_group['lr'] * 0.2
+    # lr_start = 0.003
+    # lr_fin   = 0.000002
+    # lr_decay = (lr_fin/lr_start)**(1./epoch)
+    # for param_group in optimizer.param_groups:
+    #     param_group['lr'] = lr_decay
     return
 
 if __name__=='__main__':
     cpu         =    False
     data        =    './data'
     arch        =    'hbnet'
-    lr          =    0.01
+    lr          =    0.008
     pretrained  =    False
     evaluate    =    False
 
@@ -112,10 +117,10 @@ if __name__=='__main__':
 
 
     trainset    = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=8, shuffle=True, num_workers=2)
 
     testset     = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
-    testloader  = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
+    testloader  = torch.utils.data.DataLoader(testset, batch_size=8, shuffle=False, num_workers=2)
 
     # define classes
     classes     = ('plane', 'car', 'bird', 'cat',
@@ -133,9 +138,9 @@ if __name__=='__main__':
 
     for key, value in param_dict.items():
         params += [{'params'      : [value],
-                    'lr'          :    base_lr,
+                    'lr'          : base_lr,
                     'weight_decay': 0.00001}]
-        optimizer = optim.Adam(params, lr=0.050, weight_decay=0.00001)
+        optimizer = optim.Adam(params, lr=lr, weight_decay=0.00001)
     criterion   = nn.CrossEntropyLoss()
 
     ## MODEL INITIALIZATION
@@ -160,16 +165,17 @@ if __name__=='__main__':
         model.cuda()
         model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
     print(model)
+    bin_op = util.BinOp(model)
     if not pretrained:
         print("Skipping optimizer loading")
     else:
            optimizer.load_state_dict(pmod2['optimizer'])
        
-       if evaluate:
-           test()
-           exit(0)
+    if evaluate:
+        test()
+        exit(0)
 
-       for epoch in range(0, 320):
-           adjust_learning_rate(optimizer, epoch)
-           train(epoch)
-           test(optimizer)
+    for epoch in range(0, 320):
+        adjust_learning_rate(optimizer, epoch)
+        train(epoch)
+        test(optimizer)
