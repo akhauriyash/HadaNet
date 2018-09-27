@@ -33,7 +33,7 @@ def train(epoch):
         # Forward pass
         data, target = Variable(data.cuda()), Variable(target.cuda())
         optimizer.zero_grad()
-        output          = model(data)
+        output       = model(data)
         # Backward pass
         ## L2-SVM etc.?
         loss         = criterion(output, target)
@@ -117,10 +117,10 @@ if __name__=='__main__':
 
 
     trainset    = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=8, shuffle=True, num_workers=2)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, num_workers=2)
 
     testset     = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
-    testloader  = torch.utils.data.DataLoader(testset, batch_size=8, shuffle=False, num_workers=2)
+    testloader  = torch.utils.data.DataLoader(testset, batch_size=64, shuffle=False, num_workers=2)
 
     # define classes
     classes     = ('plane', 'car', 'bird', 'cat',
@@ -148,9 +148,17 @@ if __name__=='__main__':
         print('==> Initializing model parameters ...')
         best_acc = 0
         for m in model.modules():
-            if isinstance(m, nn.Conv2d):
-                m.weight.data.normal_(0, 0.05)
-                m.bias.data.zero_()
+            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+                c = float(m.weight.data[0].nelement())
+                m.weight.data = m.weight.data.normal_(0, 1.0/c)
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data = m.weight.data.zero_().add(1.0)
+        # for m in model.modules():
+        #     if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+        #         m.weight.data.normal_(0, 0.05)
+        #         m.bias.data.zero_()
+        #     elif isinstance(m, nn.BatchNorm2d):
+        #         m.weight.data = m.weight.data.zero_().add(1.0)
     ## Model loading
     else:
         print('==> Load pretrained model form', pretrained, '...')
@@ -178,4 +186,4 @@ if __name__=='__main__':
     for epoch in range(0, 320):
         adjust_learning_rate(optimizer, epoch)
         train(epoch)
-        test(optimizer)
+        test()

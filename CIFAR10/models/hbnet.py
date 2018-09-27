@@ -84,7 +84,7 @@ class BinActive(Function):
     @staticmethod
     def backward(ctx, grad_output):
         input,             =    ctx.saved_tensors
-        output             =    bingradupd(input)
+        output             =    binAbs(input)
         binAgg             =    16
         grad_input         =    grad_output.clone()
         g_out              =    grad_output.clone()
@@ -94,7 +94,8 @@ class BinActive(Function):
         m = output.abs().mul(grad_input)
         ## Here, div(g_out.nelement()) should be binAgg by proof. 
         ## but that does not work.
-        m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
+        # m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
+        m_add = (g_out.mul(input.sign())).sum().div(binAgg).expand(s)
         m = m.add(m_add)
         return m
 
@@ -180,7 +181,6 @@ class hbPass(nn.Module):
         self.dropout_ratio  =   dropout
         if dropout!=0:
             self.dropout    =   nn.Dropout(dropout)    
-        self.linear         =   nn.Linear(input_channels, output_channels)
         ##########################################################
         self.binactive      =   BinActive.apply
         if not self.Linear:
@@ -192,6 +192,7 @@ class hbPass(nn.Module):
         ##########################################################
         else:
             self.bn         =   nn.BatchNorm1d(input_channels, eps=1e-4, momentum=0.1, affine=True)
+            self.linear         =   nn.Linear(input_channels, output_channels)
         ##########################################################
         self.relu = nn.ReLU(inplace = True)
         ##########################################################
@@ -216,11 +217,11 @@ class hbPass(nn.Module):
 
 
 '''
-	For hbPass
-		if Convolutional
-			BN --> IM2COL --> BINACTIVE --> COL2IM --> DROPOUT --> CONVOLUTION --> RELU
-		if Linear
-			BINACTIVE --> LINEAR --> RELU
+    For hbPass
+        if Convolutional
+            BN --> IM2COL --> BINACTIVE --> COL2IM --> DROPOUT --> CONVOLUTION --> RELU
+        if Linear
+            BINACTIVE --> LINEAR --> RELU
 '''
 
   #   Preprocessing:
@@ -243,16 +244,16 @@ class HbNet(nn.Module):
                 nn.BatchNorm2d(128,  eps=1e-4, momentum=0.1, affine=True),
                 nn.ReLU(inplace=True),
                 hbPass(128, 128, kernel_size=3, stride=1, padding=1),
-                nn.MaxPool2d(kernel_size=2, stride=1),
+                nn.MaxPool2d(kernel_size=3, stride=1),
                 hbPass(128, 256, kernel_size=3, stride=1, padding=1),
-                hbPass(256, 256, kernel_size=3, stride=1, padding=1),
-                nn.MaxPool2d(kernel_size=2, stride=1),
+                # hbPass(256, 256, kernel_size=3, stride=1, padding=1),
+                nn.MaxPool2d(kernel_size=3, stride=2),
                 hbPass(256, 512, kernel_size=3, stride=1, padding=1),
-                hbPass(512, 512, kernel_size=3, stride=1, padding=1),
-                nn.MaxPool2d(kernel_size=2, stride=1),
+                # hbPass(512, 512, kernel_size=3, stride=1, padding=1),
+                nn.MaxPool2d(kernel_size=3, stride=2),
             )
         self.classifier = nn.Sequential(
-                hbPass(512*29*29, 1024, Linear=True),
+                hbPass(512*6*6, 1024, Linear=True),
                 nn.BatchNorm1d(1024, eps=1e-4, momentum=0.1, affine=True),
                 hbPass(1024,   1024, Linear=True),
                 nn.BatchNorm1d(1024, eps=1e-4, momentum=0.1, affine=True),
@@ -260,15 +261,18 @@ class HbNet(nn.Module):
             )
     def forward(self, x):
         x = self.features(x)
-        x = x.view(x.size(0), 512*29*29)
+        x = x.view(x.size(0), 512*6*6)
         x = self.classifier(x)
         return x
+
 
 # model = HbNet()
 # model.cuda()
 
 # k = model(torch.randn(32, 3, 32, 32).cuda())
 # print(k.size())
+
+
 
 # class HbNet(nn.Module):
 #     def __init__(self):
