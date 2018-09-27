@@ -93,7 +93,7 @@ if __name__=='__main__':
     cpu         =    False
     data        =    './data'
     arch        =    'hbnet'
-    lr          =    0.008
+    lr          =    0.08
     pretrained  =    False
     evaluate    =    False
 
@@ -118,7 +118,6 @@ if __name__=='__main__':
 
     trainset    = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, num_workers=2)
-
     testset     = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
     testloader  = torch.utils.data.DataLoader(testset, batch_size=64, shuffle=False, num_workers=2)
 
@@ -128,7 +127,7 @@ if __name__=='__main__':
     # define the model
     print('==> building model ...')
     if arch    == 'hbnet':
-        model   = hbnet.HbNet()
+        model   = hbnet.hbnet()
     else:
         raise Exception(arch+' is currently not supported')
 

@@ -40,15 +40,9 @@ def binActive(input):
         output      =   torch.squeeze(output.mul(binmat))
         del binmat
     else:
-        binmat      =   input.sign()
-        listmat     =   list(torch.split(torch.abs(input), binAgg, dim=-1))
-        splitup     =   torch.stack(listmat)
-        stackmat    =   torch.mean(splitup, dim=-1, keepdim=False).repeat(1, 1, 1, listmat[0].size(-1))
-        del listmat, splitup
-        z           =   list(stackmat)
-        output      =   torch.cat(z, dim=-1)
-        output      =   torch.squeeze(output) 
-        del z
+        binmat = input.sign()
+        stackmat = torch.mean(input, dim=-1, keepdim=True).repeat(1, 1, input.size(-1))
+        output = stackmat
         output      = torch.squeeze(output.mul(binmat))
     if(restore != 0):
         output      =   output.reshape(restore)
@@ -78,18 +72,15 @@ def binAbs(input):
         output = torch.cat((stackmat, residualmat), dim=-1)
         del stackmat, residualmat
     else:
-        listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
-        splitup = torch.stack(listmat)
-        stackmat = torch.mean(splitup, dim=-1, keepdim=False).repeat(1, 1, 1, listmat[0].size(-1))
-        del listmat, splitup
-        z = list(stackmat)
-        output = torch.cat(z, dim=-1)
-        del z
+        # binmat = input.sign()
+        stackmat = torch.mean(input, dim=-1, keepdim=True).repeat(1, 1, input.size(-1))
+        output = stackmat
     output = torch.squeeze(output) 
     if(restore!=0):
         output = output.reshape(restore)
     return output
 
+    
 class BinOp():
     def __init__(self, model):
         count_Layers = 0
