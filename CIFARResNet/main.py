@@ -81,7 +81,7 @@ def adjust_learning_rate(optimizer, epoch):
     update_list = [60, 120, 200, 240, 280]
     if epoch in update_list:
         for param_group in optimizer.param_groups:
-            param_group['lr'] = param_group['lr'] * 0.2
+            param_group['lr'] = param_group['lr'] * 0.1
     # lr_start = 0.003
     # lr_fin   = 0.000002
     # lr_decay = (lr_fin/lr_start)**(1./epoch)
@@ -93,7 +93,7 @@ if __name__=='__main__':
     cpu         =    False
     data        =    './data'
     arch        =    'hbnet'
-    lr          =    0.08
+    lr          =    0.01
     pretrained  =    False
     evaluate    =    False
 
