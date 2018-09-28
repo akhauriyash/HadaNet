@@ -82,19 +82,20 @@ class BinActive(Function):
     @staticmethod
     def backward(ctx, grad_output):
         input,             =    ctx.saved_tensors
-        output             =    binAbs(input)
+        # output             =    binAbs(input)
         binAgg             =    16
         grad_input         =    grad_output.clone()
-        g_out              =    grad_output.clone()
-        s                  =    g_out.size()
+        # g_out              =    grad_output.clone()
+        # s                  =    g_out.size()
         grad_input[input.le(-1.0)] = 0
         grad_input[input.ge( 1.0)] = 0
-        m = output.abs().mul(grad_input)
+        # m = output.abs().mul(grad_input)
         ## Here, div(g_out.nelement()) should be binAgg by proof. 
         ## but that does not work.
         # m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
-        m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
-        m = m.add(m_add)
+        # m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
+        # m = m.add(m_add)
+        m = grad_input
         return m
 
 

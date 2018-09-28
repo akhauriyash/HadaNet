@@ -51,6 +51,36 @@ def binAbs(input):
         output = output.reshape(restore)
     return output
 
+def eqn_grad_sum(input):
+    shape   =   input.size()
+    binAgg = 16
+    restore = 0
+    if(len(shape)==4):
+        restore     =   input.size()
+        input       =   input.reshape(shape[0], -1)
+    shape           =   input.size()
+    if(len(shape)==2): 
+        input       =   input.unsqueeze(1)
+    shape = input.size()
+    if(shape[-1] > binAgg):
+        listmat = list(torch.split(input, binAgg, dim=-1))
+        residualmat = listmat[-1]
+        splitup = torch.stack(listmat[:-1])
+        stackmat = torch.mean(splitup, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
+        del listmat, splitup
+        residualmat = torch.mean(residualmat, dim=-1, keepdim=True).repeat(1, 1, residualmat.size(-1))
+        z = list(stackmat)
+        stackmat = torch.cat(z, dim=-1)
+        output = torch.cat((stackmat, residualmat), dim=-1)
+        del stackmat, residualmat
+    else:
+        # binmat = input.sign()
+        stackmat = torch.mean(input, dim=-1, keepdim=True).repeat(1, 1, input.size(-1))
+        output = stackmat
+    output = torch.squeeze(output) 
+    if(restore!=0):
+        output = output.reshape(restore)
+    return output
 
 
 class BinActive(Function):
@@ -94,7 +124,8 @@ class BinActive(Function):
         m = output.abs().mul(grad_input)
         ## Here, div(g_out.nelement()) should be binAgg by proof. 
         ## but that does not work.
-        m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
+        m_add = eqn_grad_sum(g_out.mul(input.sign()))
+        # m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
         m = m.add(m_add)
         return m
 
