@@ -77,23 +77,42 @@ def test():
         save_state(model, optimizer, best_acc)
     return
 
+# def adjust_learning_rate(optimizer, epoch):
+#     update_list = [60, 120, 200, 240, 280]
+#     if epoch in update_list:
+#         for param_group in optimizer.param_groups:
+#             param_group['lr'] = param_group['lr'] * 0.2
+#     # lr_start = 0.003
+#     # lr_fin   = 0.000002
+#     # lr_decay = (lr_fin/lr_start)**(1./epoch)
+#     # for param_group in optimizer.param_groups:
+#     #     param_group['lr'] = lr_decay
+    # return
+
 def adjust_learning_rate(optimizer, epoch):
-    update_list = [60, 120, 200, 240, 280]
-    if epoch in update_list:
+    if epoch < 30:
         for param_group in optimizer.param_groups:
-            param_group['lr'] = param_group['lr'] * 0.2
-    # lr_start = 0.003
-    # lr_fin   = 0.000002
-    # lr_decay = (lr_fin/lr_start)**(1./epoch)
-    # for param_group in optimizer.param_groups:
-    #     param_group['lr'] = lr_decay
-    return
+            param_group['lr'] = 0.005
+        return 0.005
+    elif epoch < 80:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = 0.001
+        return 0.001
+    elif epoch < 130:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = 0.0005
+        return 0.0005
+    else:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = 0.0001
+        return 0.0001
+    return 
 
 if __name__=='__main__':
     cpu         =    False
     data        =    './data'
     arch        =    'hbnet'
-    lr          =    0.008
+    lr          =    0.005
     pretrained  =    False
     evaluate    =    False
 
@@ -117,10 +136,10 @@ if __name__=='__main__':
 
 
     trainset    = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, num_workers=2)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
 
     testset     = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
-    testloader  = torch.utils.data.DataLoader(testset, batch_size=64, shuffle=False, num_workers=2)
+    testloader  = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
 
     # define classes
     classes     = ('plane', 'car', 'bird', 'cat',
@@ -184,6 +203,6 @@ if __name__=='__main__':
         exit(0)
 
     for epoch in range(0, 320):
-        adjust_learning_rate(optimizer, epoch)
+        lr = adjust_learning_rate(optimizer, epoch)
         train(epoch)
         test()

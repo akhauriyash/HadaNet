@@ -13,108 +13,67 @@ from torch.autograd import gradcheck, Variable
 from torch._thnn import type2backend
 from torch.nn.modules.utils import _pair
 
-binAgg = 16
-
 # For proving angle preservation property
 def angle(a, b):
     cos = nn.CosineSimilarity()
     return math.degrees(math.acos(cos(a.view(1, -1),b.view(1, -1))))
 
 
-def binAbs(input):
-    shape   =   input.size()
-    restore = 0
-    if(len(shape)==4):
-        restore     =   input.size()
-        input       =   input.reshape(shape[0], -1)
-    shape           =   input.size()
-    if(len(shape)==2): 
-        input       =   input.unsqueeze(1)
-    shape = input.size()
-    if(shape[-1] > binAgg):
-        listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
-        residualmat = listmat[-1]
-        splitup = torch.stack(listmat[:-1])
-        stackmat = torch.mean(splitup, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
-        residualmat = torch.mean(residualmat, dim=-1, keepdim=True).repeat(1, 1, residualmat.size(-1))
-        z = list(stackmat)
-        stackmat = torch.cat(z, dim=-1)
-        output = torch.cat((stackmat, residualmat), dim=-1)
-    else:
-        listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
-        splitup = torch.stack(listmat)
-        stackmat = torch.mean(splitup, dim=-1, keepdim=False).repeat(1, 1, 1, listmat[0].size(-1))
-        z = list(stackmat)
-        output = torch.cat(z, dim=-1)
-    output = torch.squeeze(output) 
-    if(restore!=0):
-        output = output.reshape(restore)
-    return output
 
-def eqn_grad_sum(input):
-    shape   =   input.size()
+def binFunc(input, abs_bin=False, signed_bin=False, binmat_mul=False):
     binAgg = 16
+    shape   = input.size()
     restore = 0
     if(len(shape)==4):
-        restore     =   input.size()
-        input       =   input.reshape(shape[0], -1)
-    shape           =   input.size()
-    if(len(shape)==2): 
-        input       =   input.unsqueeze(1)
-    shape = input.size()
+        restore   = input.size()
+        input     = input.reshape(shape[0], -1)
+    shape   = input.size()
+    if(len(shape)==2):
+        input     = input.unsqueeze(1)
+    shape   = input.size()
     if(shape[-1] > binAgg):
-        listmat = list(torch.split(input, binAgg, dim=-1))
-        residualmat = listmat[-1]
-        splitup = torch.stack(listmat[:-1])
-        stackmat = torch.mean(splitup, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
-        del listmat, splitup
-        residualmat = torch.mean(residualmat, dim=-1, keepdim=True).repeat(1, 1, residualmat.size(-1))
-        z = list(stackmat)
-        stackmat = torch.cat(z, dim=-1)
-        output = torch.cat((stackmat, residualmat), dim=-1)
-        del stackmat, residualmat
+        if(abs_bin==True):
+            listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+        elif(binmat_mul==True):
+            listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+            binmat  = input.sign()
+        elif(signed_bin==True):
+            listmat = list(torch.split(input, binAgg, dim=-1))
+        residualmat = torch.mean(listmat[-1], dim=-1, keepdim=True).repeat(1, 1, listmat[-1].size(-1))
+        listmat = torch.stack(listmat[:-1])
+        listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
+        listmat = torch.cat(list(listmat), dim=-1)
+        output = torch.cat((listmat, residualmat), dim=-1)
+        if(binmat_mul==True):
+            output = output.mul(binmat)
     else:
-        # binmat = input.sign()
-        stackmat = torch.mean(input, dim=-1, keepdim=True).repeat(1, 1, input.size(-1))
-        output = stackmat
-    output = torch.squeeze(output) 
+        if(abs_bin==True):
+            listmat = list(input)
+        elif(binmat_mul==True):
+            listmat = list(input)
+            binmat = input.sign()
+        elif(signed_bin==True):
+            listmat = list(input)
+        listmat = torch.stack(listmat)
+        listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, listmat[-1].size(-1))
+        output = listmat
+        if(binmat_mul==True):
+            output = output.mul(binmat)
+    output = torch.squeeze(output)
     if(restore!=0):
         output = output.reshape(restore)
     return output
-
 
 class BinActive(Function):
     @staticmethod
     def forward(ctx, input):
         ctx.save_for_backward(input)
-        shape   =   input.size()
-        if(len(shape) == 2):  
-            input = input.unsqueeze(1)
-        shape   =   input.size()
-        if(shape[-1] > binAgg):
-            binmat  =   input.sign()
-            listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
-            residualmat = listmat[-1]
-            splitup = torch.stack(listmat[:-1])
-            stackmat = torch.mean(splitup, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
-            residualmat = torch.mean(residualmat, dim=-1, keepdim=True).repeat(1, 1, residualmat.size(-1))
-            z = list(stackmat)
-            stackmat = torch.cat(z, dim=-1)
-            output = torch.cat((stackmat, residualmat), dim=-1)
-            output = torch.squeeze(output.mul(binmat))
-        else:
-            binmat = input.sign()
-            listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
-            splitup = torch.stack(listmat)
-            stackmat = torch.mean(splitup, dim=-1, keepdim=False).repeat(1, 1, 1, listmat[0].size(-1))
-            z = list(stackmat)
-            output = torch.cat(z, dim=-1)
-            output = torch.squeeze(output.mul(binmat))
+        output = binFunc(input, binmat_mul=True)
         return output
     @staticmethod
     def backward(ctx, grad_output):
         input,             =    ctx.saved_tensors
-        output             =    bingradupd(input)
+        output             =    binFunc(input, abs_bin=True)
         binAgg             =    16
         grad_input         =    grad_output.clone()
         g_out              =    grad_output.clone()
@@ -122,13 +81,15 @@ class BinActive(Function):
         grad_input[input.le(-1.0)] = 0
         grad_input[input.ge( 1.0)] = 0
         m = output.abs().mul(grad_input)
-        ## Here, div(g_out.nelement()) should be binAgg by proof. 
-        ## but that does not work.
-        m_add = eqn_grad_sum(g_out.mul(input.sign()))
-        # m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
+        m_add = grad_output.mul(input.sign())
+        # m_add = binFunc(m_add), signed_bin=True).mul(input.sign())
+        if len(s) == 4:
+            m_add = m_add.sum(3, keepdim=True)\
+                    .sum(2, keepdim=True).sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
+        elif len(s) == 2:
+            m_add = m_add.sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
         m = m.add(m_add)
         return m
-
 
 class Im2Col(Function):
     @staticmethod
@@ -197,21 +158,25 @@ class Col2Im(Function):
 
 
 class hbPass(nn.Module):
-    def __init__(self, input_channels, output_channels,                     \
+    def __init__(self, input_channels, output_channels, previous_conv = False, size=0,\
             kernel_size=-1, stride=-1, padding=-1, dropout=0, groups=1, Linear=False):
         super(hbPass, self).__init__()
         ##########################################################
         self.layer_type     =   'hbPass'
+        self.input_channels =   input_channels
+        self.output_channels=   output_channels
         self.kernel_size    =   kernel_size
         self.stride         =   stride
         self.padding        =   padding
         self.Linear         =   Linear
+        self.previous_conv  =   previous_conv
         self.binagg         =   16
         ##########################################################
         self.dropout_ratio  =   dropout
         if dropout!=0:
             self.dropout    =   nn.Dropout(dropout)    
-        self.linear         =   nn.Linear(input_channels, output_channels)
+        if Linear == True:
+            self.linear         =   nn.Linear(input_channels, output_channels)
         ##########################################################
         self.binactive      =   BinActive.apply
         if not self.Linear:
@@ -222,11 +187,16 @@ class hbPass(nn.Module):
             self.bn         =   nn.BatchNorm2d(input_channels, eps=1e-4, momentum=0.1, affine=True)
         ##########################################################
         else:
-            self.bn         =   nn.BatchNorm1d(input_channels, eps=1e-4, momentum=0.1, affine=True)
+            # if self.previous_conv:
+            #     self.bn = nn.BatchNorm2d(input_channels/size, eps=1e-4, momentum=0.1, affine=True)
+            # else:
+            #     self.bn = nn.BatchNorm1d(input_channels, eps=1e-4, momentum=0.1, affine=True)
+            self.linear = nn.Linear(input_channels, output_channels)
         ##########################################################
         self.relu = nn.ReLU(inplace = True)
         ##########################################################
     def forward(self, x, kernel_size=_pair(3), dilation=_pair(1), padding=_pair(0), stride=_pair(1)):
+        
         if not self.Linear:
             x = self.bn(x)
             ##########################################################
@@ -238,8 +208,10 @@ class hbPass(nn.Module):
             x               =   self.FPconv(x)
             ##########################################################
         else:
+            x = self.binactive(x)
+            if self.previous_conv:
+                x = x.view(x.size(0), self.input_channels)
             ##########################################################
-            x               =   self.binactive(x)
             x               =   self.linear(x)
             ##########################################################
         x = self.relu(x)
@@ -258,27 +230,108 @@ class hbPass(nn.Module):
 class HbNet(nn.Module):
     def __init__(self):
         super(HbNet, self).__init__()
-        self.xnor = nn.Sequential(
-                nn.Conv2d(3, 192, kernel_size=5, stride=1, padding=2),
-                nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
-                nn.ReLU(inplace=True),
-                hbPass(192, 160, kernel_size=1, stride=1, padding=0),
-                hbPass(160,  96, kernel_size=1, stride=1, padding=0),
-                nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+        self.conv1 = nn.Conv2d(1, 20, kernel_size=5, stride=1)
+        self.bn_conv1 = nn.BatchNorm2d(20, eps=1e-4, momentum=0.1, affine=False)
+        self.relu_conv1 = nn.ReLU(inplace=True)
+        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.bin_conv2 = hbPass(20, 50, kernel_size=5, stride=1, padding=0)
+        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.bin_ip1 = hbPass(50*4*4, 500, Linear=True,
+                previous_conv=True, size=4*4)
+        self.ip2 = nn.Linear(500, 10)
+        self.bn_c2l = nn.BatchNorm2d(50, eps=1e-4, momentum=0.1, affine=True)
+        self.bn_l2l = nn.BatchNorm1d(500, eps=1e-4, momentum=0.1, affine=True)
+        for m in self.modules():
+            if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
+                if hasattr(m.weight, 'data'):
+                    m.weight.data.zero_().add_(1.0)
+        return
 
-                hbPass( 96, 192, kernel_size=5, stride=1, padding=2, dropout=0.5),
-                hbPass(192, 192, kernel_size=1, stride=1, padding=0),
-                hbPass(192, 192, kernel_size=1, stride=1, padding=0),
-                nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
-
-                hbPass(192, 192, kernel_size=3, stride=1, padding=1, dropout=0.5),
-                hbPass(192, 192, kernel_size=1, stride=1, padding=0),
-                nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
-                nn.Conv2d(192, 10, kernel_size=1, stride=1, padding=0),
-                nn.ReLU(inplace=True),
-                nn.AvgPool2d(kernel_size=8, stride=1, padding=0)
-                )
     def forward(self, x):
-        x = self.xnor(x)
-        x = x.view(x.size(0), 10)
+        for m in self.modules():
+            if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
+                if hasattr(m.weight, 'data'):
+                    m.weight.data.clamp_(min=0.01)
+        x = self.conv1(x)
+        x = self.bn_conv1(x)
+        x = self.relu_conv1(x)
+        x = self.pool1(x)
+        x = self.bin_conv2(x)
+        x = self.pool2(x)
+        x = self.bn_c2l(x)
+        x = self.bin_ip1(x)
+        x = self.bn_l2l(x)
+        x = self.ip2(x)
         return x
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# class BinActive(Function):
+#     @staticmethod
+#     def forward(ctx, input):
+#         ctx.save_for_backward(input)
+#         output = binFunc(input, binmat_mul=True)
+#         # shape   =   input.size()
+#         # if(len(shape) == 2):  
+#         #     input = input.unsqueeze(1)
+#         # shape   =   input.size()
+#         # if(shape[-1] > binAgg):
+#         #     binmat  =   input.sign()
+#         #     listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+#         #     residualmat = listmat[-1]
+#         #     splitup = torch.stack(listmat[:-1])
+#         #     stackmat = torch.mean(splitup, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
+#         #     residualmat = torch.mean(residualmat, dim=-1, keepdim=True).repeat(1, 1, residualmat.size(-1))
+#         #     z = list(stackmat)
+#         #     stackmat = torch.cat(z, dim=-1)
+#         #     output = torch.cat((stackmat, residualmat), dim=-1)
+#         #     output = torch.squeeze(output.mul(binmat))
+#         # else:
+#         #     binmat = input.sign()
+#         #     listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+#         #     splitup = torch.stack(listmat)
+#         #     stackmat = torch.mean(splitup, dim=-1, keepdim=False).repeat(1, 1, 1, listmat[0].size(-1))
+#         #     z = list(stackmat)
+#         #     output = torch.cat(z, dim=-1)
+#         #     output = torch.squeeze(output.mul(binmat))
+#         return output
+#     @staticmethod
+#     def backward(ctx, grad_output):
+#         input,             =    ctx.saved_tensors
+#         output             =    bingradupd(input)
+#         binAgg             =    16
+#         grad_input         =    grad_output.clone()
+#         g_out              =    grad_output.clone()
+#         s                  =    g_out.size()
+#         grad_input[input.le(-1.0)] = 0
+#         grad_input[input.ge( 1.0)] = 0
+#         m = output.abs().mul(grad_input)
+#         ## Here, div(g_out.nelement()) should be binAgg by proof. 
+#         ## but that does not work.
+#         m_add = eqn_grad_sum(g_out.mul(input.sign()))
+#         # m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
+#         m = m.add(m_add)
+#         return m
