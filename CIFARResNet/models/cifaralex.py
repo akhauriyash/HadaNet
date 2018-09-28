@@ -45,7 +45,7 @@ def binAbs(input):
         del stackmat, residualmat
     else:
         # binmat = input.sign()
-        stackmat = torch.mean(input, dim=-1, keepdim=True).repeat(1, 1, input.size(-1))
+        stackmat = torch.mean(torch.abs(input), dim=-1, keepdim=True).repeat(1, 1, input.size(-1))
         output = stackmat
     output = torch.squeeze(output) 
     if(restore!=0):
@@ -53,6 +53,36 @@ def binAbs(input):
     return output
 
 
+def eqn_grad_sum(input):
+    shape   =   input.size()
+    binAgg = 16
+    restore = 0
+    if(len(shape)==4):
+        restore     =   input.size()
+        input       =   input.reshape(shape[0], -1)
+    shape           =   input.size()
+    if(len(shape)==2): 
+        input       =   input.unsqueeze(1)
+    shape = input.size()
+    if(shape[-1] > binAgg):
+        listmat = list(torch.split(input, binAgg, dim=-1))
+        residualmat = listmat[-1]
+        splitup = torch.stack(listmat[:-1])
+        stackmat = torch.mean(splitup, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
+        del listmat, splitup
+        residualmat = torch.mean(residualmat, dim=-1, keepdim=True).repeat(1, 1, residualmat.size(-1))
+        z = list(stackmat)
+        stackmat = torch.cat(z, dim=-1)
+        output = torch.cat((stackmat, residualmat), dim=-1)
+        del stackmat, residualmat
+    else:
+        # binmat = input.sign()
+        stackmat = torch.mean(input, dim=-1, keepdim=True).repeat(1, 1, input.size(-1))
+        output = stackmat
+    output = torch.squeeze(output) 
+    if(restore!=0):
+        output = output.reshape(restore)
+    return output
 
 class BinActive(Function):
     @staticmethod
@@ -75,7 +105,7 @@ class BinActive(Function):
             output = torch.squeeze(output.mul(binmat))
         else:
             binmat = input.sign()
-            stackmat = torch.mean(input, dim=-1, keepdim=True).repeat(1, 1, input.size(-1))
+            stackmat = torch.mean(torch.abs(input), dim=-1, keepdim=True).repeat(1, 1, input.size(-1))
             output = stackmat
             output = torch.squeeze(output.mul(binmat))
         return output
@@ -92,9 +122,11 @@ class BinActive(Function):
         m = output.abs().mul(grad_input)
         ## Here, div(g_out.nelement()) should be binAgg by proof. 
         ## but that does not work.
+        m_add = eqn_grad_sum(g_out.mul(input.sign()))
         # m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
-        m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
+        # m_add = (g_out.mul(input.sign())).sum().div(g_out.nelement()).expand(s)
         m = m.add(m_add)
+        # m = grad_input
         return m
 
 
@@ -296,25 +328,30 @@ class HbNet(nn.Module):
         super(HbNet, self).__init__()
         self.features = nn.Sequential(
                 nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1),
-                # nn.BatchNorm2d(128,  eps=1e-4, momentum=0.1, affine=True),
                 nn.ReLU(inplace=True),
                 nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.BatchNorm2d(64,  eps=1e-4, momentum=0.1, affine=True),
                 hbConv(64, 192, kernel_size=5, stride=1, padding=2),
                 nn.ReLU(inplace=True),
                 nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.BatchNorm2d(192,  eps=1e-4, momentum=0.1, affine=True),
                 hbConv(192, 384, kernel_size=3, stride=1, padding=1),
                 nn.ReLU(inplace=True),
+                nn.BatchNorm2d(384,  eps=1e-4, momentum=0.1, affine=True),
                 hbConv(384, 256, kernel_size=3, stride=1, padding=1),
                 nn.ReLU(inplace=True),
+                nn.BatchNorm2d(256,  eps=1e-4, momentum=0.1, affine=True),
                 hbConv(256, 256, kernel_size=3, stride=1, padding=1),
                 nn.ReLU(inplace=True),
                 nn.MaxPool2d(kernel_size=2, stride=2),
                 )
         self.classifier = nn.Sequential(
         		nn.Dropout(),
+        		nn.BatchNorm1d(256*2*2, eps=1e-4, momentum=0.1, affine=True),
         		hbLin(256*2*2, 4096),
         		nn.ReLU(inplace=True),
         		nn.Dropout(),
+        		nn.BatchNorm1d(4096, eps=1e-4, momentum=0.1, affine=True),
         		hbLin(4096, 4096),
         		nn.ReLU(inplace=True),
         		nn.Linear(4096, 10),
