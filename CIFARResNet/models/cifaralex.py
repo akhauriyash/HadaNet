@@ -23,6 +23,7 @@ def angle(a, b):
 
 def binAbs(input):
     shape   =   input.size()
+    binAgg = 16
     restore = 0
     if(len(shape)==4):
         restore     =   input.size()
@@ -43,13 +44,9 @@ def binAbs(input):
         output = torch.cat((stackmat, residualmat), dim=-1)
         del stackmat, residualmat
     else:
-        listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
-        splitup = torch.stack(listmat)
-        stackmat = torch.mean(splitup, dim=-1, keepdim=False).repeat(1, 1, 1, listmat[0].size(-1))
-        del listmat, splitup
-        z = list(stackmat)
-        output = torch.cat(z, dim=-1)
-        del z
+        # binmat = input.sign()
+        stackmat = torch.mean(input, dim=-1, keepdim=True).repeat(1, 1, input.size(-1))
+        output = stackmat
     output = torch.squeeze(output) 
     if(restore!=0):
         output = output.reshape(restore)
@@ -78,11 +75,8 @@ class BinActive(Function):
             output = torch.squeeze(output.mul(binmat))
         else:
             binmat = input.sign()
-            listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
-            splitup = torch.stack(listmat)
-            stackmat = torch.mean(splitup, dim=-1, keepdim=False).repeat(1, 1, 1, listmat[0].size(-1))
-            z = list(stackmat)
-            output = torch.cat(z, dim=-1)
+            stackmat = torch.mean(input, dim=-1, keepdim=True).repeat(1, 1, input.size(-1))
+            output = stackmat
             output = torch.squeeze(output.mul(binmat))
         return output
     @staticmethod
@@ -260,6 +254,7 @@ class hbLin(nn.Module):
         self.layer_type     =   'hbLin'
         self.binagg         =   16
         self.bias           =   bias
+        self.binactive = BinActive.apply
         ##########################################################
         self.dropout_ratio  =   dropout
         if dropout!=0:
@@ -300,37 +295,43 @@ class HbNet(nn.Module):
     def __init__(self):
         super(HbNet, self).__init__()
         self.features = nn.Sequential(
-                nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=5),
+                nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1),
                 # nn.BatchNorm2d(128,  eps=1e-4, momentum=0.1, affine=True),
                 nn.ReLU(inplace=True),
                 nn.MaxPool2d(kernel_size=2, stride=2),
                 hbConv(64, 192, kernel_size=5, stride=1, padding=2),
                 nn.ReLU(inplace=True),
-                nn.MaxPool2d(kernel_size=3, stride=2),
-                hbConv(192, 384, kernel_size=3, padding=1),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                hbConv(192, 384, kernel_size=3, stride=1, padding=1),
                 nn.ReLU(inplace=True),
-                hbConv(384, 256, kernel_size=3, padding=1),
+                hbConv(384, 256, kernel_size=3, stride=1, padding=1),
                 nn.ReLU(inplace=True),
-                hbConv(256, 256, kernel_size=3, padding=1),
+                hbConv(256, 256, kernel_size=3, stride=1, padding=1),
                 nn.ReLU(inplace=True),
-                nn.MaxPool2d(kernel_size=3, stride=2), 
-            )
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                )
         self.classifier = nn.Sequential(
-        		nn.Dropout,
-                hbLin(256*6*6, 4096),
-                nn.ReLU(inplace=True),
-                nn.Dropout(),
-                nn.Linear(4096, 4096),
-                nn.ReLU(inplace=True),
-                nn.Linear(4096, 10),
+        		nn.Dropout(),
+        		hbLin(256*2*2, 4096),
+        		nn.ReLU(inplace=True),
+        		nn.Dropout(),
+        		hbLin(4096, 4096),
+        		nn.ReLU(inplace=True),
+        		nn.Linear(4096, 10),
             )
     def forward(self, x):
         x = self.features(x)
-        x = x.view(x.size(0), 256*6*6)
+        # print(x.size())
+        x = x.view(x.size(0), -1)
         x = self.classifier(x)
         return x
+# model = HbNet().cuda()
+# tor = torch.randn(32, 3, 32, 32).cuda()
+# print(model(tor).size())
 
-
+def hbnet(pretrained=False, **kwargs):
+	model = HbNet()
+	return model
 # model = HbNet()
 # model.cuda()
 
