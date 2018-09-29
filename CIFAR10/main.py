@@ -102,10 +102,18 @@ def adjust_learning_rate(optimizer, epoch):
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.0005
         return 0.0005
-    else:
+    elif epoch < 170:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.0001
         return 0.0001
+    elif epoch < 250:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = 0.00005
+        return 0.00005
+    else:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = 0.00001
+        return 0.00001
     return 
 
 if __name__=='__main__':
@@ -123,7 +131,7 @@ if __name__=='__main__':
 
     print('==> Preparing data..')
     transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
+        # transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -159,25 +167,27 @@ if __name__=='__main__':
         params += [{'params'      : [value],
                     'lr'          : base_lr,
                     'weight_decay': 0.00001}]
-        optimizer = optim.Adam(params, lr=lr, weight_decay=0.00001)
+    # optimizer = optim.SGD(params, lr=.1, momentum=0.9, nesterov=True)
+    optimizer = optim.Adam(params, lr=lr, weight_decay=0.00001)
+    # optimizer = torch.optim.Adagrad(params, lr=1.0, rho=0.9, eps=1e-06, weight_decay=1e-5)
     criterion   = nn.CrossEntropyLoss()
 
     ## MODEL INITIALIZATION
     if not pretrained:
         print('==> Initializing model parameters ...')
         best_acc = 0
-        for m in model.modules():
-            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
-                c = float(m.weight.data[0].nelement())
-                m.weight.data = m.weight.data.normal_(0, 1.0/c)
-            # elif isinstance(m, nn.BatchNorm2d):
-            #     m.weight.data = m.weight.data.zero_().add(1.0)
         # for m in model.modules():
         #     if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
-        #         m.weight.data.normal_(0, 0.05)
-        #         m.bias.data.zero_()
-        #     elif isinstance(m, nn.BatchNorm2d):
-        #         m.weight.data = m.weight.data.zero_().add(1.0)
+        #         c = float(m.weight.data[0].nelement())
+        #         m.weight.data = m.weight.data.normal_(0, 1.0/c)
+        #     # elif isinstance(m, nn.BatchNorm2d):
+        #     #     m.weight.data = m.weight.data.zero_().add(1.0)
+        for m in model.modules():
+            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+                m.weight.data.normal_(0, 0.05)
+                m.bias.data.zero_()
+            # elif isinstance(m, nn.BatchNorm2d):
+            #     m.weight.data = m.weight.data.zero_().add(1.0)
     ## Model loading
     else:
         print('==> Load pretrained model form', pretrained, '...')

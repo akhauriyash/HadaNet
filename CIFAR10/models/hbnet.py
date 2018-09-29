@@ -228,6 +228,11 @@ class hbPass(nn.Module):
 class HbNet(nn.Module):
     def __init__(self):
         super(HbNet, self).__init__()
+        '''
+        Conv -> ReLU -> Pool -> BN -> BinActive() -> Conv -> ReLU
+             -> MaxPool -> BN -> BinActive() -> Lin -> ReLU -> BN 
+             -> BinActive() -> Lin -> ReLU -> BN -> Lin -> SoftMax
+        '''
         # self.conv1 = nn.Conv2d(1, 20, kernel_size=5, stride=1)
         # self.bn_conv1 = nn.BatchNorm2d(20, eps=1e-4, momentum=0.1, affine=False)
         # self.relu_conv1 = nn.ReLU(inplace=True)
@@ -240,7 +245,9 @@ class HbNet(nn.Module):
         # self.bn_c2l = nn.BatchNorm2d(50, eps=1e-4, momentum=0.1, affine=True)
         # self.bn_l2l = nn.BatchNorm1d(500, eps=1e-4, momentum=0.1, affine=True)
         self.conv1 = nn.Conv2d(3, 6, kernel_size=5, stride=1, padding=0)
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.relu  = nn.ReLU(inplace=True)
+        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2) 
+        self.bn0   = nn.BatchNorm2d(6, eps=1e-4, momentum=0.1, affine=True)
         self.conv2 = hbPass(6, 16, kernel_size=5, stride=1, padding=0)
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.bn_c2l = nn.BatchNorm2d(16, eps=1e-4, momentum=0.1, affine=True)
@@ -249,11 +256,11 @@ class HbNet(nn.Module):
         self.ip2   = hbPass(120, 84, Linear=True, previous_conv=False)
         self.bn_l2l2 = nn.BatchNorm1d(84, eps=1e-4, momentum=0.1, affine=True)
         self.ip3   = nn.Linear(84, 10)
-        self.softmax = nn.Softmax()
-        for m in self.modules():
-            if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
-                if hasattr(m.weight, 'data'):
-                    m.weight.data.zero_().add_(1.0)
+        # self.softmax = nn.Softmax()
+        # for m in self.modules():
+        #     if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
+        #         if hasattr(m.weight, 'data'):
+        #             m.weight.data.zero_().add_(1.0)
         return
 
     def forward(self, x):
@@ -262,7 +269,9 @@ class HbNet(nn.Module):
                 if hasattr(m.weight, 'data'):
                     m.weight.data.clamp_(min=0.01)
         x = self.conv1(x)
+        x = self.relu(x)
         x = self.pool1(x)
+        x = self.bn0(x)
         x = self.conv2(x)
         x = self.pool2(x)
         x = self.bn_c2l(x)
@@ -271,7 +280,7 @@ class HbNet(nn.Module):
         x = self.ip2(x)
         x = self.bn_l2l2(x)
         x = self.ip3(x)
-        x = self.softmax(x)
+        # x = self.softmax(x)
         return x
 
 
