@@ -88,39 +88,64 @@ def test():
 #     # for param_group in optimizer.param_groups:
 #     #     param_group['lr'] = lr_decay
     # return
-
 def adjust_learning_rate(optimizer, epoch):
-    if epoch < 30:
+    if epoch < 40:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = 0.05
+        return 0.05
+    elif epoch < 100:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = 0.01
+        return 0.01
+    elif epoch < 150:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.005
         return 0.005
-    elif epoch < 80:
+    elif epoch < 200:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.001
         return 0.001
-    elif epoch < 130:
+    elif epoch < 250:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.0005
         return 0.0005
-    elif epoch < 170:
+    else:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.0001
         return 0.0001
-    elif epoch < 250:
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.00005
-        return 0.00005
-    else:
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.00001
-        return 0.00001
     return 
+# def adjust_learning_rate(optimizer, epoch):
+#     if epoch < 30:
+#         for param_group in optimizer.param_groups:
+#             param_group['lr'] = 0.005
+#         return 0.005
+#     elif epoch < 80:
+#         for param_group in optimizer.param_groups:
+#             param_group['lr'] = 0.001
+#         return 0.001
+#     elif epoch < 130:
+#         for param_group in optimizer.param_groups:
+#             param_group['lr'] = 0.0005
+#         return 0.0005
+#     elif epoch < 170:
+#         for param_group in optimizer.param_groups:
+#             param_group['lr'] = 0.0001
+#         return 0.0001
+#     elif epoch < 250:
+#         for param_group in optimizer.param_groups:
+#             param_group['lr'] = 0.00005
+#         return 0.00005
+#     else:
+#         for param_group in optimizer.param_groups:
+#             param_group['lr'] = 0.00001
+#         return 0.00001
+#     return 
 
 if __name__=='__main__':
     cpu         =    False
     data        =    './data'
     arch        =    'hbnet'
-    lr          =    0.005
+    lr          =    0.1
     pretrained  =    False
     evaluate    =    False
 

@@ -64,16 +64,19 @@ def test(evaluate=False):
         output = model(data)
         test_loss += criterion(output, target).data[0]
         pred = output.data.max(1, keepdim=True)[1]
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+        correct += float(pred.eq(target.data.view_as(pred)).cpu().sum())
 
     bin_op.restore()
     
     acc = 100. * correct / len(test_loader.dataset)
+    acc = float(acc)
+    correct = float(correct)
     if (acc > best_acc):
         best_acc = acc
         if not evaluate:
             save_state(model, best_acc)
-    print(correct)
+    print("Current: ", float(acc))
+    print("Best: ", best_acc)
     # print(correct/len(test_loader.dataset))
     # test_loss /= len(test_loader.dataset)
     # print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({f}%)'.format(
