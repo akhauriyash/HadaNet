@@ -226,32 +226,33 @@ class hbPass(nn.Module):
 class HbNet(nn.Module):
     def __init__(self):
         super(HbNet, self).__init__()
-        self.conv0 = nn.Conv2d(3, 128, kernel_size=3, stride=1, padding=0)
+        self.conv0 = nn.Conv2d(3, 128, kernel_size=3, stride=1, padding=1)
         self.relu0 = nn.ReLU(inplace=True)
         self.bn0   = nn.BatchNorm2d(128, eps=1e-4, momentum=0.1, affine=True)
-        self.conv1 = hbPass(128, 128, kernel_size=3, stride=1, padding=0)
+        self.conv1 = hbPass(128, 128, kernel_size=3, stride=1, padding=1)
         self.mp1   = nn.MaxPool2d(kernel_size=2, stride=2)
         self.bn1   = nn.BatchNorm2d(128, eps=1e-4, momentum=0.1, affine=True)
-        self.conv2 = hbPass(128, 256, kernel_size=2, stride=1, padding=0)
+        self.conv2 = hbPass(128, 256, kernel_size=2, stride=1, padding=1)
         self.bn2   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
-        self.conv3 = hbPass(256, 256, kernel_size=2, stride=1, padding=0)
+        self.conv3 = hbPass(256, 256, kernel_size=2, stride=1, padding=1)
         self.mp2   = nn.MaxPool2d(kernel_size=2, stride=2)
         self.bn3   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
-        self.conv4 = hbPass(256, 512, kernel_size=2, stride=1, padding=0)
+        self.conv4 = hbPass(256, 512, kernel_size=2, stride=1, padding=1)
         self.bn4   = nn.BatchNorm2d(512, eps=1e-4, momentum=0.1, affine=True)
-        self.conv5 = hbPass(512, 512, kernel_size=2, stride=1, padding=0)
+        self.conv5 = hbPass(512, 512, kernel_size=2, stride=1, padding=1)
         self.mp3   = nn.MaxPool2d(kernel_size=2, stride=1)
         self.bn_c2l= nn.BatchNorm2d(512, eps=1e-4, momentum=0.1, affine=True)
-        self.fc1   = hbPass(512*3*3, 1024, Linear=True, previous_conv=True, size = 3*3)
+        self.fc1   = hbPass(512*10*10, 1024, Linear=True, previous_conv=True, size = 10*10)
         self.bn_l2l= nn.BatchNorm1d(1024, eps=1e-4, momentum=0.1, affine=True)
         self.fc2   = hbPass(1024, 1024, Linear=True, previous_conv=False)
         self.bn_l2F= nn.BatchNorm1d(1024, eps=1e-4, momentum=0.1, affine=True)
         self.fc3   = nn.Linear(1024, 10)
+        self.bn_out= nn.BatchNorm1d(10, eps=1e-4, momentum=0.1, affine=True)
     def forward(self, x):
-        for m in self.modules():
-            if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
-                if hasattr(m.weight, 'data'):
-                    m.weight.data.clamp_(min=0.01)
+        # for m in self.modules():
+        #     if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
+        #         if hasattr(m.weight, 'data'):
+        #             m.weight.data.clamp_(min=0.01)
         x = self.conv0(x)
         x = self.relu0(x)
         x = self.bn0(x)
@@ -273,8 +274,11 @@ class HbNet(nn.Module):
         x = self.fc2(x)
         x = self.bn_l2F(x)
         x = self.fc3(x)
+        x = self.bn_out(x)
         return x
-
+# model = HbNet().cuda()
+# tor = torch.randn(3, 3, 32, 32).cuda()
+# print(model(tor).size())
 # class HbNet(nn.Module):
 #     def __init__(self):
 #         super(HbNet, self).__init__()
