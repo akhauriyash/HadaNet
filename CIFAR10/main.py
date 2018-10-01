@@ -13,17 +13,22 @@ import util
 import torch.nn as nn
 import torch.optim as optim
 from models import hbnet
+from collections import OrderedDict
 from torch.autograd import Variable
 
 def save_state(model, optimizer, acc):
     print("==> Saving model ...")
     state = {
-            'acc'          : acc,
+            'acc'        : acc,
             'state_dict' : model.state_dict(),
             'optimizer'  : optimizer.state_dict(),
-            }
-    torch.save(state, 'models/hbnet.best.pth.tar')
-
+            }            
+    test=0
+    if(test==1):
+        state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
+        torch.save(state, 'models/test.best.pth.tar')
+    else:
+        torch.save(state, 'models/hbnet.best.pth.tar')
 
 def train(epoch):
     model.train()
@@ -64,10 +69,10 @@ def test():
     correct          = float(correct)
     bin_op.restore()
     acc              = 100*float(correct)/float(len(testloader.dataset))
-    test_loss       /= float(len(testloader.dataset))
+    test_loss       /= len(testloader.dataset)
 
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({}%)'.format(
-        test_loss * 128, correct, len(testloader.dataset),
+        test_loss , correct, len(testloader.dataset),
         100*float(correct)/float(len(testloader.dataset))))
     
     print('Best Accuracy: {}%\n'.format(float(best_acc)))
@@ -91,62 +96,36 @@ def test():
 def adjust_learning_rate(optimizer, epoch):
     if epoch < 40:
         for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.05
-        return 0.05
-    elif epoch < 100:
-        for param_group in optimizer.param_groups:
             param_group['lr'] = 0.01
         return 0.01
-    elif epoch < 150:
+    elif epoch < 100:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.005
         return 0.005
-    elif epoch < 200:
+    elif epoch < 150:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.001
         return 0.001
-    elif epoch < 250:
+    elif epoch < 200:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.0005
         return 0.0005
-    else:
+    elif epoch < 250:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.0001
         return 0.0001
+    else:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = 0.00005
+        return 0.00005
     return 
-# def adjust_learning_rate(optimizer, epoch):
-#     if epoch < 30:
-#         for param_group in optimizer.param_groups:
-#             param_group['lr'] = 0.005
-#         return 0.005
-#     elif epoch < 80:
-#         for param_group in optimizer.param_groups:
-#             param_group['lr'] = 0.001
-#         return 0.001
-#     elif epoch < 130:
-#         for param_group in optimizer.param_groups:
-#             param_group['lr'] = 0.0005
-#         return 0.0005
-#     elif epoch < 170:
-#         for param_group in optimizer.param_groups:
-#             param_group['lr'] = 0.0001
-#         return 0.0001
-#     elif epoch < 250:
-#         for param_group in optimizer.param_groups:
-#             param_group['lr'] = 0.00005
-#         return 0.00005
-#     else:
-#         for param_group in optimizer.param_groups:
-#             param_group['lr'] = 0.00001
-#         return 0.00001
-#     return 
 
 if __name__=='__main__':
     cpu         =    False
     data        =    './data'
     arch        =    'hbnet'
-    lr          =    0.1
-    pretrained  =    False
+    lr          =    0.01
+    pretrained  =    True
     evaluate    =    False
 
 
@@ -156,7 +135,7 @@ if __name__=='__main__':
 
     print('==> Preparing data..')
     transform_train = transforms.Compose([
-        # transforms.RandomCrop(32, padding=4),
+        transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -193,7 +172,7 @@ if __name__=='__main__':
                     'lr'          : base_lr,
                     'weight_decay': 0.00001}]
     # optimizer = optim.SGD(params, lr=.1, momentum=0.9, nesterov=True)
-    optimizer = optim.Adam(params, lr=lr, weight_decay=0.00001)
+    optimizer = optim.Adam(params, lr=0.1, weight_decay=0.00001)
     # optimizer = torch.optim.Adagrad(params, lr=1.0, rho=0.9, eps=1e-06, weight_decay=1e-5)
     criterion   = nn.CrossEntropyLoss()
 
@@ -233,12 +212,11 @@ if __name__=='__main__':
         print("Skipping optimizer loading")
     else:
            optimizer.load_state_dict(pmod2['optimizer'])
-       
     if evaluate:
         test()
         exit(0)
 
-    for epoch in range(0, 320):
+    for epoch in range(15, 320):
         lr = adjust_learning_rate(optimizer, epoch)
         train(epoch)
         test()

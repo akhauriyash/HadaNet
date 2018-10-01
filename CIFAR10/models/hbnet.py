@@ -247,7 +247,7 @@ class HbNet(nn.Module):
         self.fc2   = hbPass(1024, 1024, Linear=True, previous_conv=False)
         self.bn_l2F= nn.BatchNorm1d(1024, eps=1e-4, momentum=0.1, affine=True)
         self.fc3   = nn.Linear(1024, 10)
-        self.bn_out= nn.BatchNorm1d(10, eps=1e-4, momentum=0.1, affine=True)
+        # self.bn_out= nn.BatchNorm1d(10, eps=1e-4, momentum=0.1, affine=True)
     def forward(self, x):
         # for m in self.modules():
         #     if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
@@ -274,7 +274,7 @@ class HbNet(nn.Module):
         x = self.fc2(x)
         x = self.bn_l2F(x)
         x = self.fc3(x)
-        x = self.bn_out(x)
+        # x = self.bn_out(x)
         return x
 # model = HbNet().cuda()
 # tor = torch.randn(3, 3, 32, 32).cuda()
