@@ -82,13 +82,13 @@ class BinActive(Function):
         grad_input[input.ge( 1.0)] = 0
         m = output.abs().mul(grad_input)
         m_add = grad_output.mul(input.sign())
-#        m_add = binFunc(m_add, signed_bin=True).mul(input.sign())
-        if len(s) == 4:
-            m_add = m_add.sum(3, keepdim=True)\
-                     .sum(2, keepdim=True).sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
-        elif len(s) == 2:
-            m_add = m_add.sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
-        m_add = m_add.mul(input.sign())
+        m_add = binFunc(m_add, signed_bin=True).mul(input.sign())
+#        if len(s) == 4:
+ #           m_add = m_add.sum(3, keepdim=True)\
+  #                   .sum(2, keepdim=True).sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
+   #     elif len(s) == 2:
+    #        m_add = m_add.sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
+     #   m_add = m_add.mul(input.sign())
         m = m.add(m_add)
         return m
 
