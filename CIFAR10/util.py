@@ -15,7 +15,7 @@ from torch.nn.modules.utils import _pair
 
 
 def binFunc(input, abs_bin=False, signed_bin=False, binmat_mul=False):
-    binAgg = 8
+    binAgg = 4
     shape   = input.size()
     restore = 0
     if(len(shape)==4):
@@ -133,7 +133,7 @@ class BinOp():
     def updateBinaryGradWeight(self):
         for index in range(self.num_of_params):
             weight = self.target_modules[index].data
-            binAgg = 8
+            binAgg = 4
             n      = weight[0].nelement()
             s      = weight.size()
             m      = binFunc(weight, abs_bin=True)
