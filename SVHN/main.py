@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
+import time
 import math
 import sys
 import os
@@ -13,17 +13,49 @@ import util
 import torch.nn as nn
 import torch.optim as optim
 from models import hbnet
+from collections import OrderedDict
 from torch.autograd import Variable
 
-def save_state(model, optimizer, acc):
+def save_state(model, best_acc):
     print("==> Saving model ...")
     state = {
-            'acc'          : acc,
+            'acc'        : best_acc,
             'state_dict' : model.state_dict(),
             'optimizer'  : optimizer.state_dict(),
-            }
-    torch.save(state, 'models/hbnet.best.pth.tar')
-
+            }            
+    test=0
+    if(test==1):
+        state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
+        torch.save(state, 'models/test.best.pth.tar')
+    else:
+        torch.save(state, 'models/hbnet.pth.tar')
+    # state = {
+    #         'acc'        : best_acc,
+    #         'state_dict' : model.state_dict(),
+    #         'optimizer'  : optimizer.state_dict(),
+    #         }            
+    # state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
+    # torch.save(state, 'models/test.best.pth.tar')
+def save_state2(model, best_acc):
+    print("==> Saving model ...")
+    state = {
+            'acc'        : best_acc,
+            'state_dict' : model.state_dict(),
+            'optimizer'  : optimizer.state_dict(),
+            }            
+    test=0
+    if(test==1):
+        state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
+        torch.save(state, 'models/test.best.pth.tar')
+    else:
+        torch.save(state, 'models/hbnet2.pth.tar')
+    # state = {
+    #         'acc'        : best_acc,
+    #         'state_dict' : model.state_dict(),
+    #         'optimizer'  : optimizer.state_dict(),
+    #         }            
+    # state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
+    # torch.save(state, 'models/test.best.pth.tar')
 
 def train(epoch):
     model.train()
@@ -112,64 +144,78 @@ if __name__=='__main__':
 
 
     trainset    = torchvision.datasets.SVHN(root='./data', split='train', download=True, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=32, shuffle=True, num_workers=2)
 
     testset     = torchvision.datasets.SVHN(root='./data', split='test', download=True, transform=transform_test)
-    testloader  = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
+    testloader  = torch.utils.data.DataLoader(testset, batch_size=32, shuffle=False, num_workers=2)
 
     # define classes
-    classes     = ('plane', 'car', 'bird', 'cat',
-                'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+    classes = ('plane', 'car', 'bird', 'cat',
+            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+
     # define the model
-    print('==> building model ...')
-    if arch    == 'hbnet':
-        model   = hbnet.HbNet()
+    # print('==> building model',arch,'...')
+    if arch == 'hbnet':
+        model = hbnet.HbNet()
     else:
         raise Exception(arch+' is currently not supported')
 
-    base_lr     = float(lr)
-    param_dict  = dict(model.named_parameters())
-    params      = []
+    # initialize the model
 
-    for key, value in param_dict.items():
-        params += [{'params'      : [value],
-                    'lr'          :    base_lr,
-                    'weight_decay': 0.00001}]
-        optimizer = optim.Adam(params, lr=0.050, weight_decay=0.00001)
-    criterion   = nn.CrossEntropyLoss()
-
-    ## MODEL INITIALIZATION
     if not pretrained:
         print('==> Initializing model parameters ...')
         best_acc = 0
         for m in model.modules():
             if isinstance(m, nn.Conv2d):
                 m.weight.data.normal_(0, 0.05)
-                m.bias.data.zero_()
-    ## Model loading
+                m.bias.data.zero_() 
     else:
-        print('==> Load pretrained model form', pretrained, '...')
-        pmod2 = torch.load('models/hbnet.best.pth.tar')
-        pmod  = torch.load('models/test.best.pth.tar')
+        # print('==> Load pretrained model form', pretrained, '...')
+        pmod2 = torch.load('models/hbnet.pth.tar')
+        # print(pmod['state_dict'].keys())
+        print("****************************")
+        pmod = torch.load('models/test.best.pth.tar')
+        # print(pmod['state_dict'].keys())
+        # print(len(pmod2['state_dict'].keys()))
+        # print(len(pmod['state_dict'].keys()))
         for key, value in pmod2['state_dict'].items():
             pmod['state_dict'][key[7:]] = value
+        # print(len(pmod2['state_dict'].keys()))
+        # print(len(pmod['state_dict'].keys()))
+        # model.load_state_dict(pmod['state_dict'])
+        best_acc = 0
         model.load_state_dict(pmod['state_dict'])
-        best_acc = pmod['acc']
 
     if not cpu:
         model.cuda()
         model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
     print(model)
-    if not pretrained:
-        print("Skipping optimizer loading")
-    else:
-           optimizer.load_state_dict(pmod2['optimizer'])
-   
+
+    # define solver and criterion
+    base_lr = float(lr)
+    param_dict = dict(model.named_parameters())
+    params = []
+
+    for key, value in param_dict.items():
+        params += [{'params':[value], 'lr': base_lr,
+            'weight_decay':0.00001}]
+
+        optimizer = optim.Adam(params, lr=0.10,weight_decay=0.00001)
+    criterion = nn.CrossEntropyLoss()
+    if pretrained:
+        optimizer.load_state_dict(pmod2['optimizer'])
+    # define the binarization operator
+    bin_op = util.BinOp(model)
+    # save_state(model, 0)
+    # do the evaluation if specified
     if evaluate:
         test()
         exit(0)
 
-    for epoch in range(0, 320):
+    # start training
+    for epoch in range(239, 320):
+        if(epoch%10 == 0):
+            save_state2(model, 0)
         adjust_learning_rate(optimizer, epoch)
         train(epoch)
-        test(optimizer)
+        test()
