@@ -449,5 +449,328 @@ Best Accuracy: 82.07%
      ==> Saving model ...
      Train Epoch: 53 [(0.00%)]       Loss: 0.0805    LR: 0.001
 
+Train Epoch: 53 [(38.31%)]      Loss: 0.1417    LR: 0.001
+Train Epoch: 53 [(76.63%)]      Loss: 0.1246    LR: 0.001
+
+Test set: Average loss: 0.0098, Accuracy: 8802.0/10000 (88.02%)
+Best Accuracy: 88.19%
+
+Train Epoch: 54 [(0.00%)]       Loss: 0.1738    LR: 0.001
+Train Epoch: 54 [(38.31%)]      Loss: 0.0728    LR: 0.001
+Train Epoch: 54 [(76.63%)]      Loss: 0.0924    LR: 0.001
+
+Test set: Average loss: 0.0797, Accuracy: 8792.0/10000 (87.92%)
+Best Accuracy: 88.19%
+
+Train Epoch: 55 [(0.00%)]       Loss: 0.1439    LR: 0.001
+Train Epoch: 55 [(38.31%)]      Loss: 0.1257    LR: 0.001
+Train Epoch: 55 [(76.63%)]      Loss: 0.1035    LR: 0.001
+
+Test set: Average loss: 0.0158, Accuracy: 8785.0/10000 (87.85%)
+Best Accuracy: 88.19%
+
+Train Epoch: 56 [(0.00%)]       Loss: 0.1232    LR: 0.001
+Train Epoch: 56 [(38.31%)]      Loss: 0.1045    LR: 0.001
+Train Epoch: 56 [(76.63%)]      Loss: 0.1241    LR: 0.001
+
+Test set: Average loss: 0.0221, Accuracy: 8792.0/10000 (87.92%)
+Best Accuracy: 88.19%
+
+Train Epoch: 57 [(0.00%)]       Loss: 0.1346    LR: 0.001
+Train Epoch: 57 [(38.31%)]      Loss: 0.0670    LR: 0.001
+Train Epoch: 57 [(76.63%)]      Loss: 0.1708    LR: 0.001
+
+Test set: Average loss: 0.0288, Accuracy: 8826.0/10000 (88.26%)
+Best Accuracy: 88.19%
+
+==> Saving model ...
+Train Epoch: 58 [(0.00%)]       Loss: 0.0917    LR: 0.001
+Train Epoch: 58 [(38.31%)]      Loss: 0.1213    LR: 0.001
+Train Epoch: 58 [(76.63%)]      Loss: 0.0893    LR: 0.001
+
+Test set: Average loss: 0.1347, Accuracy: 8826.0/10000 (88.26%)
+Best Accuracy: 88.26%
+
+Train Epoch: 59 [(0.00%)]       Loss: 0.1191    LR: 0.001
+Train Epoch: 59 [(38.31%)]      Loss: 0.0991    LR: 0.001
+Train Epoch: 59 [(76.63%)]      Loss: 0.1746    LR: 0.001
+
+Test set: Average loss: 0.0759, Accuracy: 8801.0/10000 (88.01%)
+Best Accuracy: 88.26%
+
+==> Saving model ...
+Train Epoch: 60 [(0.00%)]       Loss: 0.1232    LR: 0.001
+Train Epoch: 60 [(38.31%)]      Loss: 0.0950    LR: 0.001
+
+in Epoch: 90 [(0.00%)]       Loss: 0.1112    LR: 0.001
+Train Epoch: 90 [(38.31%)]      Loss: 0.0587    LR: 0.001
+Train Epoch: 90 [(76.63%)]      Loss: 0.1309    LR: 0.001
+main.py:66: UserWarning: invalid index of a 0-dim tensor. This will be an error in PyTorch 0.5. Use tensor.item() to convert a 0-dim tensor to a Python number
+  test_loss   += criterion(output, target).data[0]
+
+  Test set: Average loss: 0.0119, Accuracy: 8806.0/10000 (88.06%)
+  Best Accuracy: 88.27%
+
+  Train Epoch: 91 [(0.00%)]       Loss: 0.1216    LR: 0.001
+  Train Epoch: 91 [(38.31%)]      Loss: 0.1186    LR: 0.001
+  Train Epoch: 91 [(76.63%)]      Loss: 0.0627    LR: 0.001
+
+  Test set: Average loss: 0.0026, Accuracy: 8814.0/10000 (88.14%)
+  Best Accuracy: 88.27%
+
+  Train Epoch: 92 [(0.00%)]       Loss: 0.0742    LR: 0.001
+  Train Epoch: 92 [(38.31%)]      Loss: 0.0409    LR: 0.001
+  Train Epoch: 92 [(76.63%)]      Loss: 0.0557    LR: 0.001
+
+  Test set: Average loss: 0.0031, Accuracy: 8811.0/10000 (88.11%)
+  Best Accuracy: 88.27%
+
+  Train Epoch: 93 [(0.00%)]       Loss: 0.1146    LR: 0.001
+  Train Epoch: 93 [(38.31%)]      Loss: 0.1334    LR: 0.001
+  Train Epoch: 93 [(76.63%)]      Loss: 0.1014    LR: 0.001
+
+  Test set: Average loss: 0.0027, Accuracy: 8815.0/10000 (88.15%)
+  Best Accuracy: 88.27%
+
+  Train Epoch: 94 [(0.00%)]       Loss: 0.1427    LR: 0.001
+  Train Epoch: 94 [(38.31%)]      Loss: 0.0523    LR: 0.001
+  Train Epoch: 94 [(76.63%)]      Loss: 0.0949    LR: 0.001
+
+  Test set: Average loss: 0.0039, Accuracy: 8810.0/10000 (88.1%)
+  Best Accuracy: 88.27%
+
+  Train Epoch: 95 [(0.00%)]       Loss: 0.0385    LR: 0.001
+  Train Epoch: 95 [(38.31%)]      Loss: 0.0852    LR: 0.001
+  Train Epoch: 95 [(76.63%)]      Loss: 0.0691    LR: 0.001
+
+  Test set: Average loss: 0.0061, Accuracy: 8797.0/10000 (87.97%)
+  Best Accuracy: 88.27%
+
+  Train Epoch: 96 [(0.00%)]       Loss: 0.0392    LR: 0.001
+  Train Epoch: 96 [(38.31%)]      Loss: 0.0705    LR: 0.001
+  Train Epoch: 96 [(76.63%)]      Loss: 0.0547    LR: 0.001
+
+  Test set: Average loss: 0.0028, Accuracy: 8821.0/10000 (88.21%)
+  Best Accuracy: 88.27%
+
+  Train Epoch: 97 [(0.00%)]       Loss: 0.0644    LR: 0.001
+  Train Epoch: 97 [(38.31%)]      Loss: 0.1198    LR: 0.001
+  Train Epoch: 97 [(76.63%)]      Loss: 0.0570    LR: 0.001
+
+  Test set: Average loss: 0.0066, Accuracy: 8803.0/10000 (88.03%)
+  Best Accuracy: 88.27%
+
+  Train Epoch: 98 [(0.00%)]       Loss: 0.0861    LR: 0.001
+  Train Epoch: 98 [(38.31%)]      Loss: 0.0430    LR: 0.001
+  Train Epoch: 98 [(76.63%)]      Loss: 0.1128    LR: 0.001
+
+  Test set: Average loss: 0.0059, Accuracy: 8806.0/10000 (88.06%)
+  Best Accuracy: 88.27%
+
+  Train Epoch: 99 [(0.00%)]       Loss: 0.0877    LR: 0.001
+  Train Epoch: 99 [(38.31%)]      Loss: 0.0886    LR: 0.001
+  Train Epoch: 99 [(76.63%)]      Loss: 0.0709    LR: 0.001
+
+  Test set: Average loss: 0.0036, Accuracy: 8816.0/10000 (88.16%)
+  Best Accuracy: 88.27%
+
+  ==> Saving model ...
+  Train Epoch: 100 [(0.00%)]      Loss: 0.1142    LR: 0.0001
+  Train Epoch: 100 [(38.31%)]     Loss: 0.0537    LR: 0.0001
+  Train Epoch: 100 [(76.63%)]     Loss: 0.0565    LR: 0.0001
+
+  Test set: Average loss: 0.0026, Accuracy: 8842.0/10000 (88.42%)
+  Best Accuracy: 88.27%
+
+  ==> Saving model ...
+  Train Epoch: 101 [(
+      0.00%)]      Loss: 0.1034    LR: 0.0001
+  Train Epoch: 101 [(38.31%)]     Loss: 0.0631    LR: 0.0001
+  Train Epoch: 101 [(76.63%)]     Loss: 0.1078    LR: 0.0001
+
+  Test set: Average loss: 0.0027, Accuracy: 8802.0/10000 (88.02%)
+  Best Accuracy: 88.42%
+
+  Train Epoch: 102 [(0.00%)]      Loss: 0.0547    LR: 0.0001
+  Train Epoch: 102 [(38.31%)]     Loss: 0.0364    LR: 0.0001
+  Train Epoch: 102 [(76.63%)]     Loss: 0.0439    LR: 0.0001
+
+  Test set: Average loss: 0.0032, Accuracy: 8838.0/10000 (88.38%)
+  Best Accuracy: 88.42%
+
+  Train Epoch: 103 [(0.00%)]      Loss: 0.0586    LR: 0.0001
+  Train Epoch: 103 [(38.31%)]     Loss: 0.1007    LR: 0.0001
+  Train Epoch: 103 [(76.63%)]     Loss: 0.1753    LR: 0.0001
 
 
+  Test set: Average loss: 0.0030, Accuracy: 8828.0/10000 (88.28%)
+  Best Accuracy: 88.42%
+
+  Train Epoch: 104 [(0.00%)]      Loss: 0.0481    LR: 0.0001
+  Train Epoch: 104 [(38.31%)]     Loss: 0.0162    LR: 0.0001
+  Train Epoch: 104 [(76.63%)]     Loss: 0.0257    LR: 0.0001
+
+  Test set: Average loss: 0.0027, Accuracy: 8817.0/10000 (88.17%)
+  Best Accuracy: 88.42%
+
+  Train Epoch: 105 [(0.00%)]      Loss: 0.0309    LR: 0.0001
+  Train Epoch: 105 [(38.31%)]     Loss: 0.0648    LR: 0.0001
+  Train Epoch: 105 [(76.63%)]     Loss: 0.1018    LR: 0.0001
+
+  Test set: Average loss: 0.0030, Accuracy: 8831.0/10000 (88.31%)
+  Best Accuracy: 88.42%
+
+  Train Epoch: 106 [(0.00%)]      Loss: 0.0561    LR: 0.0001
+  Train Epoch: 106 [(38.31%)]     Loss: 0.0283    LR: 0.0001
+  Train Epoch: 106 [(76.63%)]     Loss: 0.0315    LR: 0.0001
+
+  Test set: Average loss: 0.0029, Accuracy: 8812.0/10000 (88.12%)
+  Best Accuracy: 88.42%
+
+  Train Epoch: 107 [(0.00%)]      Loss: 0.0733    LR: 0.0001
+  Train Epoch: 107 [(38.31%)]     Loss: 0.0790    LR: 0.0001
+  Train Epoch: 107 [(76.63%)]     Loss: 0.0424    LR: 0.0001
+
+  Test set: Average loss: 0.0027, Accuracy: 8835.0/10000 (88.35%)
+  Best Accuracy: 88.42%
+
+  Train Epoch: 108 [(0.00%)]      Loss: 0.0858    LR: 0.0001
+  Train Epoch: 108 [(38.31%)]     Loss: 0.0771    LR: 0.0001
+  Train Epoch: 108 [(76.63%)]     Loss: 0.0266    LR: 0.0001
+
+  Test set: Average loss: 0.0027, Accuracy: 8839.0/10000 (88.39%)
+  Best Accuracy: 88.42%
+
+  Train Epoch: 109 [(0.00%)]      Loss: 0.0854    LR: 0.0001
+  Train Epoch: 109 [(38.31%)]     Loss: 0.1089    LR: 0.0001
+  Train Epoch: 109 [(76.63%)]     Loss: 0.1065    LR: 0.0001
+
+  Test set: Average loss: 0.0027, Accuracy: 8831.0/10000 (88.31%)
+  Best Accuracy: 88.42%
+
+  ==> Saving model ...
+  Train Epoch: 110 [(0.00%)]      Loss: 0.0696    LR: 0.0001
+  Train Epoch: 110 [(38.31%)]     Loss: 0.0689    LR: 0.0001
+  Train Epoch: 110 [(76.63%)]     Loss: 0.0530    LR: 0.0001
+
+  Test set: Average loss: 0.0029, Accuracy: 8837.0/10000 (88.37%)
+  Best Accuracy: 88.42%
+
+  Train Epoch: 111 [(0.00%)]      Loss: 0.0757    LR: 0.0001
+  Train Epoch: 111 [(38.31%)]     Loss: 0.0464    LR: 0.0001
+  Train Epoch: 111 [(76.63%)]     Loss: 0.0648    LR: 0.0001
+
+  Test set: Average loss: 0.0027, Accuracy: 8868.0/10000 (88.68%)
+  Best Accuracy: 88.42%
+
+  ==> Saving model ...
+  Train Epoch: 112 [(0.00%)]      Loss: 0.0952    LR: 0.0001
+  Train Epoch: 112 [(38.31%)]     Loss: 0.0317    LR: 0.0001
+  Train Epoch: 112 [(76.63%)]     Loss: 0.0501    LR: 0.0001
+
+  Test set: Average loss: 0.0027, Accuracy: 8843.0/10000 (88.43%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 113 [(0.00%)]      Loss: 0.0555    LR: 0.0001
+  Train Epoch: 113 [(38.31%)]     Loss: 0.0743    LR: 0.0001
+  Train Epoch: 113 [(76.63%)]     Loss: 0.0307    LR: 0.0001
+
+  Test set: Average loss: 0.0027, Accuracy: 8829.0/10000 (88.29%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 114 [(0.00%)]      Loss: 0.0348    LR: 0.0001
+  Train Epoch: 114 [(38.31%)]     Loss: 0.1403    LR: 0.0001
+  Train Epoch: 114 [(76.63%)]     Loss: 0.0725    LR: 0.0001
+
+  Test set: Average loss: 0.0028, Accuracy: 8821.0/10000 (88.21%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 115 [(0.00%)]      Loss: 0.0568    LR: 0.0001
+  Train Epoch: 115 [(38.31%)]     Loss: 0.0262    LR: 0.0001
+  Train Epoch: 115 [(76.63%)]     Loss: 0.0585    LR: 0.0001
+
+  Test set: Average loss: 0.0032, Accuracy: 8815.0/10000 (88.15%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 116 [(0.00%)]      Loss: 0.0526    LR: 0.0001
+  Train Epoch: 116 [(38.31%)]     Loss: 0.0549    LR: 0.0001
+  Train Epoch: 116 [(76.63%)]     Loss: 0.0631    LR: 0.0001
+
+  Test set: Average loss: 0.0027, Accuracy: 8839.0/10000 (88.39%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 117 [(0.00%)]      Loss: 0.0612    LR: 0.0001
+  Train Epoch: 117 [(38.31%)]     Loss: 0.0326    LR: 0.0001
+  Train Epoch: 117 [(76.63%)]     Loss: 0.0379    LR: 0.0001
+
+  Test set: Average loss: 0.0028, Accuracy: 8836.0/10000 (88.36%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 118 [(0.00%)]      Loss: 0.0529    LR: 0.0001
+  Train Epoch: 118 [(38.31%)]     Loss: 0.0744    LR: 0.0001
+  Train Epoch: 118 [(76.63%)]     Loss: 0.0692    LR: 0.0001
+
+  Test set: Average loss: 0.0027, Accuracy: 8862.0/10000 (88.62%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 119 [(0.00%)]      Loss: 0.0580    LR: 0.0001
+  Train Epoch: 119 [(38.31%)]     Loss: 0.0763    LR: 0.0001
+  Train Epoch: 119 [(76.63%)]     Loss: 0.0618    LR: 0.0001
+
+  Test set: Average loss: 0.0029, Accuracy: 8853.0/10000 (88.53%)
+  Best Accuracy: 88.68%
+
+
+  ==> Saving model ...
+  Train Epoch: 120 [(0.00%)]      Loss: 0.0577    LR: 0.0001
+  Train Epoch: 120 [(38.31%)]     Loss: 0.0674    LR: 0.0001
+  Train Epoch: 120 [(76.63%)]     Loss: 0.0431    LR: 0.0001
+
+  Test set: Average loss: 0.0029, Accuracy: 8854.0/10000 (88.54%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 121 [(0.00%)]      Loss: 0.0590    LR: 0.0001
+  Train Epoch: 121 [(38.31%)]     Loss: 0.0673    LR: 0.0001
+  Train Epoch: 121 [(76.63%)]     Loss: 0.0389    LR: 0.0001
+
+  Test set: Average loss: 0.0027, Accuracy: 8841.0/10000 (88.41%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 122 [(0.00%)]      Loss: 0.0868    LR: 0.0001
+  Train Epoch: 122 [(38.31%)]     Loss: 0.0780    LR: 0.0001
+  Train Epoch: 122 [(76.63%)]     Loss: 0.0378    LR: 0.0001
+
+  Test set: Average loss: 0.0028, Accuracy: 8836.0/10000 (88.36%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 123 [(0.00%)]      Loss: 0.0849    LR: 0.0001
+  Train Epoch: 123 [(38.31%)]     Loss: 0.0263    LR: 0.0001
+  Train Epoch: 123 [(76.63%)]     Loss: 0.0927    LR: 0.0001
+
+  Test set: Average loss: 0.0029, Accuracy: 8830.0/10000 (88.3%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 124 [(0.00%)]      Loss: 0.0646    LR: 0.0001
+  Train Epoch: 124 [(38.31%)]     Loss: 0.0692    LR: 0.0001
+  Train Epoch: 124 [(76.63%)]     Loss: 0.0525    LR: 0.0001
+
+  Test set: Average loss: 0.0029, Accuracy: 8843.0/10000 (88.43%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 125 [(0.00%)]      Loss: 0.0200    LR: 0.0001
+  Train Epoch: 125 [(38.31%)]     Loss: 0.0797    LR: 0.0001
+  Train Epoch: 125 [(76.63%)]     Loss: 0.0492    LR: 0.0001
+
+  Test set: Average loss: 0.0028, Accuracy: 8841.0/10000 (88.41%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 126 [(0.00%)]      Loss: 0.0216    LR: 0.0001
+  Train Epoch: 126 [(38.31%)]     Loss: 0.0639    LR: 0.0001
+  Train Epoch: 126 [(76.63%)]     Loss: 0.0667    LR: 0.0001
+
+  Test set: Average loss: 0.0028, Accuracy: 8835.0/10000 (88.35%)
+  Best Accuracy: 88.68%
+
+  Train Epoch: 127 [(0.00%)]      Loss: 0.0810    LR: 0.0001
+  Train Epoch: 127 [(38.31%)]     Loss: 0.0543    LR: 0.0001
+  Train Epoch: 127 [(76.63%)]     Loss: 0.0319    LR: 0.0001

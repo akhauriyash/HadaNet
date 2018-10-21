@@ -125,7 +125,7 @@ if __name__=='__main__':
     data        =    './data'
     arch        =    'hbnet'
     lr          =    0.01
-    pretrained  =    False
+    pretrained  =    True
     evaluate    =    False
 
 
@@ -174,7 +174,16 @@ if __name__=='__main__':
     # optimizer = optim.SGD(params, lr=.1, momentum=0.9, nesterov=True)
     optimizer = optim.Adam(params, lr=0.1, weight_decay=0.00001)
     # optimizer = torch.optim.Adagrad(params, lr=1.0, rho=0.9, eps=1e-06, weight_decay=1e-5)
+
     criterion   = nn.CrossEntropyLoss()
+  #  acc = 88.27
+  #  state = {
+  #                      'acc'        : acc,
+  #                                  'state_dict' : model.state_dict(),
+  #                                              'optimizer'  : optimizer.state_dict(),
+  #                                                          }            
+  #  state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
+  #  torch.save(state, 'models/test.best.pth.tar')
 
     ## MODEL INITIALIZATION
     if not pretrained:
@@ -211,7 +220,12 @@ if __name__=='__main__':
     if not pretrained:
         print("Skipping optimizer loading")
     else:
-           optimizer.load_state_dict(pmod2['optimizer'])
+      pass
+        #  optimizer.load_state_dict(pmod2['optimizer'])
+      #  for state in optimizer.state.values():
+      #      for k, v in state.items():
+      #          if isinstance(v, torch.Tensor):
+      #              state[k] = v.to('cuda')
   #  save_state(model, optimizer, 0)
  #   print("roko BC")
 #    time.sleep(5)
@@ -219,7 +233,7 @@ if __name__=='__main__':
         test()
         exit(0)
 
-    for epoch in range(1, 320):
+    for epoch in range(203, 320):
         if(epoch%10 == 0):
             save_state(model, optimizer, 0)
         lr = adjust_learning_rate(optimizer, epoch)
