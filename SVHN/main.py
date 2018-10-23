@@ -16,7 +16,7 @@ from models import hbnet
 from collections import OrderedDict
 from torch.autograd import Variable
 
-def save_state(model, best_acc):
+def save_state(model, optimizer, best_acc):
     print("==> Saving model ...")
     state = {
             'acc'        : best_acc,
@@ -36,7 +36,7 @@ def save_state(model, best_acc):
     #         }            
     # state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
     # torch.save(state, 'models/test.best.pth.tar')
-def save_state2(model, best_acc):
+def save_state2(model, optimizer, best_acc):
     print("==> Saving model ...")
     state = {
             'acc'        : best_acc,
@@ -110,7 +110,7 @@ def test():
     return
 
 def adjust_learning_rate(optimizer, epoch):
-    update_list = [120, 200, 240, 280]
+    update_list = [10, 20, 50, 100, 120]
     if epoch in update_list:
         for param_group in optimizer.param_groups:
             param_group['lr'] = param_group['lr'] * 0.1
@@ -120,8 +120,8 @@ if __name__=='__main__':
     cpu         =    False
     data        =    './data'
     arch        =    'hbnet'
-    lr          =    0.01
-    pretrained  =    False
+    lr          =    0.05
+    pretrained  =    True
     evaluate    =    False
 
 
@@ -144,10 +144,10 @@ if __name__=='__main__':
 
 
     trainset    = torchvision.datasets.SVHN(root='./data', split='train', download=True, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=32, shuffle=True, num_workers=2)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=192, shuffle=True, num_workers=2)
 
     testset     = torchvision.datasets.SVHN(root='./data', split='test', download=True, transform=transform_test)
-    testloader  = torch.utils.data.DataLoader(testset, batch_size=32, shuffle=False, num_workers=2)
+    testloader  = torch.utils.data.DataLoader(testset, batch_size=192, shuffle=False, num_workers=2)
 
     # define classes
     classes = ('plane', 'car', 'bird', 'cat',
@@ -166,9 +166,12 @@ if __name__=='__main__':
         print('==> Initializing model parameters ...')
         best_acc = 0
         for m in model.modules():
-            if isinstance(m, nn.Conv2d):
-                m.weight.data.normal_(0, 0.05)
-                m.bias.data.zero_() 
+            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+#                m.weight.data.normal_(0, 0.05)
+                torch.nn.init.xavier_uniform_(m.weight)
+                m.bias.data.fill_(0.01)
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data = m.weight.data.zero_().add(1.0)
     else:
         # print('==> Load pretrained model form', pretrained, '...')
         pmod2 = torch.load('models/hbnet.pth.tar')
@@ -202,8 +205,8 @@ if __name__=='__main__':
 
         optimizer = optim.Adam(params, lr=0.10,weight_decay=0.00001)
     criterion = nn.CrossEntropyLoss()
-    if pretrained:
-        optimizer.load_state_dict(pmod2['optimizer'])
+#    if pretrained:
+ #       optimizer.load_state_dict(pmod2['optimizer'])
     # define the binarization operator
     bin_op = util.BinOp(model)
     # save_state(model, 0)
@@ -211,11 +214,13 @@ if __name__=='__main__':
     if evaluate:
         test()
         exit(0)
-
+    #save_state(model, optimizer, 0)
+    #print("stop now")
+    #time.sleep(4)
     # start training
-    for epoch in range(239, 320):
+    for epoch in range(1, 320):
         if(epoch%10 == 0):
-            save_state2(model, 0)
+            save_state2(model, optimizer, 0)
         adjust_learning_rate(optimizer, epoch)
         train(epoch)
         test()
