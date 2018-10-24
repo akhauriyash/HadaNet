@@ -232,6 +232,10 @@ if __name__=='__main__':
     if evaluate:
         test()
         exit(0)
+    # print("SAVING")
+    # save_state(model, optimizer, 0)
+    # print("STOP NOW")
+    # time.sleep(4) 
 
     for epoch in range(203, 320):
         if(epoch%10 == 0):
