@@ -13,7 +13,8 @@ import torch.utils.data
 import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-import model_list
+#import model_list
+from models import hbnet
 import util
 
 # set the seed
@@ -85,7 +86,7 @@ def main():
 
     if not args.distributed:
         if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
-            model.features = torch.nn.DataParallel(model.features)
+#            model.features = torch.nn.DataParallel(model.features)
             model.cuda()
         else:
             model = torch.nn.DataParallel(model).cuda()
@@ -198,7 +199,7 @@ def main():
     #     batch_size=args.batch_size, shuffle=False,
     #     num_workers=args.workers, pin_memory=True)
 
-    print model
+    print(model)
 
     # define the binarization operator
     global bin_op
@@ -247,8 +248,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
         data_time.update(time.time() - end)
 
         target = target.cuda(async=True)
-        input_var = torch.autograd.Variable(input)
-        target_var = torch.autograd.Variable(target)
+        input_var = torch.autograd.Variable(input).cuda()
+        target_var = torch.autograd.Variable(target).cuda()
 
         # process the weights including binarization
         bin_op.binarization()
@@ -362,7 +363,7 @@ class AverageMeter(object):
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 25 epochs"""
     lr = args.lr * (0.1 ** (epoch // 25))
-    print 'Learning rate:', lr
+    print( 'Learning rate:', lr)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
