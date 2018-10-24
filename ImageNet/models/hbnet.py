@@ -69,7 +69,7 @@ class BinActive(Function):
         return input.sign()
     @staticmethod
     def backward(ctx, grad_output):
-        input      =    ctx.saved_tensors
+        input,     =    ctx.saved_tensors
         grad_input = grad_output.clone()
         grad_input[input.ge(1)] = 0
         grad_input[input.le(-1)] = 0
@@ -296,8 +296,8 @@ class HbNet(nn.Module):
         self.bn_l2f= nn.BatchNorm1d(4096, eps=1e-4, momentum=0.1, affine=True)
         self.dropo2= nn.Dropout(0.5)
         self.fc3   = nn.Linear(4096, 1000)
-        self.rF    = nn.ReLU()
-        self.fcf   = nn.Linear(1000, 1)
+        # self.rF    = nn.ReLU()
+        # self.fcf   = nn.Linear(1000, 1)
         #dropout -> bn -> conv/inear -> relu
     def forward(self, x):
         x = self.conv0(x)
@@ -329,8 +329,8 @@ class HbNet(nn.Module):
         x = self.bn_l2f(x)
         x = self.dropo2(x)
         x = self.fc3(x)
-        x = self.rF(x)
-        x = self.fcf(x)
+        # x = self.rF(x)
+        # x = self.fcf(x)
         return x
 # model = HbNet().cuda()
 # k = torch.randn(32, 3, 227, 227).cuda()

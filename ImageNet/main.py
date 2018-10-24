@@ -66,6 +66,31 @@ best_prec1 = 0
 # define global bin_op
 bin_op = None
 
+
+def make_one_hot(labels, C=1000):
+    '''
+    Converts an integer label torch.autograd.Variable to a one-hot Variable.
+    
+    Parameters
+    ----------
+    labels : torch.autograd.Variable of torch.cuda.LongTensor
+        N x 1 x H x W, where N is batch size. 
+        Each value is an integer representing correct classification.
+    C : integer. 
+        number of classes in labels.
+    
+    Returns
+    -------
+    target : torch.autograd.Variable of torch.cuda.FloatTensor
+        N x C x H x W, where C is class number. One-hot encoded.
+    '''
+    labels = torch.unsqueeze(torch.unsqueeze(torch.unsqueeze(labels, -1), -1), -1)
+    one_hot = torch.cuda.FloatTensor(labels.size(0), C, labels.size(2), labels.size(3)).zero_()
+    target = one_hot.scatter_(1, labels.data, 1)
+    target = torch.autograd.Variable(target)
+    target = torch.squeeze(target)
+    return target
+
 def main():
     global args, best_prec1
     args = parser.parse_args()
@@ -249,6 +274,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         target = target.cuda(async=True)
         input_var = torch.autograd.Variable(input).cuda()
         target_var = torch.autograd.Variable(target).cuda()
+        target_var = make_one_hot(target_var, 1000)
 
         # process the weights including binarization
         bin_op.binarization()
@@ -268,8 +294,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
         loss.backward()
 
         # restore weights
-        bin_op.restore()
-        bin_op.updateBinaryGradWeight()
+        bin_op.restore(
+)        bin_op.updateBinaryGradWeight()
 
         optimizer.step()
 
@@ -304,6 +330,7 @@ def validate(val_loader, model, criterion):
         target = target.cuda(async=True)
         input_var = torch.autograd.Variable(input, volatile=True)
         target_var = torch.autograd.Variable(target, volatile=True)
+        target_var = make_one_hot(target_var, 1000)
 
         # compute output
         output = model(input_var)
