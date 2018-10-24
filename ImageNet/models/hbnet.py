@@ -277,7 +277,7 @@ class HbNet(nn.Module):
         self.fc1   = hbPass(256*6*6, 4096, Linear=True, previous_conv=True, size=6*6)
         self.dropo1= nn.Dropout(0.5)
         self.frelu1= nn.ReLU() 
-        self.bn_c2l= nn.BatchNorm1d(4096, eps=1e-4, momentum=0.1, affine=True)
+        self.bn_c2l= nn.BatchNorm1d(9216, eps=1e-4, momentum=0.1, affine=True)
         self.fc2   = hbPass(4096, 4096, Linear=True)
         self.dropo2= nn.Dropout(0.5)
         self.frelu2= nn.ReLU() 
