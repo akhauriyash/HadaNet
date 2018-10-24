@@ -125,11 +125,11 @@ def main():
     cudnn.benchmark = True
 
     # Data loading code
-    if not os.path.exists(args.data+'/imagenet_mean.binaryproto'):
-        print("==> Data directory"+args.data+"does not exits")
-        print("==> Please specify the correct data path by")
-        print("==>     --data <DATA_PATH>")
-        return
+#    if not os.path.exists(args.data+'/imagenet_mean.binaryproto'):
+ #       print("==> Data directory"+args.data+"does not exits")
+  #      print("==> Please specify the correct data path by")
+   #     print("==>     --data <DATA_PATH>")
+    #    return
 
     # Data loading code
     traindir = os.path.join(args.data, 'train')
@@ -379,7 +379,7 @@ def accuracy(output, target, topk=(1,)):
 
     res = []
     for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
+        correct_k = correct[:k].flatten().float().sum(0, keepdim=True)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
