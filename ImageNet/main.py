@@ -294,8 +294,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
         loss.backward()
 
         # restore weights
-        bin_op.restore(
-)        bin_op.updateBinaryGradWeight()
+        bin_op.restore()
+        bin_op.updateBinaryGradWeight()
 
         optimizer.step()
 
