@@ -19,7 +19,7 @@ def angle(a, b):
     return math.degrees(math.acos(cos(a.view(1, -1),b.view(1, -1))))
 
 def binFunc(input, abs_bin=False, signed_bin=False, binmat_mul=False):
-    binAgg = 4
+    binAgg = 8
     shape   = input.size()
     restore = 0
     if(len(shape)==4):
@@ -211,7 +211,7 @@ class hbPass(nn.Module):
         self.padding        =   padding
         self.Linear         =   Linear
         self.previous_conv  =   previous_conv
-        self.binagg         =   4
+        self.binagg         =   8
         ##########################################################
         self.dropout_ratio  =   dropout
         if dropout!=0:

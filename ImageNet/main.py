@@ -67,30 +67,6 @@ best_prec1 = 0
 bin_op = None
 
 
-def make_one_hot(labels, C=1000):
-    '''
-    Converts an integer label torch.autograd.Variable to a one-hot Variable.
-    
-    Parameters
-    ----------
-    labels : torch.autograd.Variable of torch.cuda.LongTensor
-        N x 1 x H x W, where N is batch size. 
-        Each value is an integer representing correct classification.
-    C : integer. 
-        number of classes in labels.
-    
-    Returns
-    -------
-    target : torch.autograd.Variable of torch.cuda.FloatTensor
-        N x C x H x W, where C is class number. One-hot encoded.
-    '''
-    labels = torch.unsqueeze(torch.unsqueeze(torch.unsqueeze(labels, -1), -1), -1)
-    one_hot = torch.cuda.FloatTensor(labels.size(0), C, labels.size(2), labels.size(3)).zero_()
-    target = one_hot.scatter_(1, labels.data, 1)
-    target = torch.autograd.Variable(target)
-    target = torch.squeeze(target)
-    return target
-
 def main():
     global args, best_prec1
     args = parser.parse_args()
@@ -126,8 +102,10 @@ def main():
 
     for m in model.modules():
         if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
-            c = float(m.weight.data[0].nelement())
-            m.weight.data = m.weight.data.normal_(0, 1.0/c)
+            # c = float(m.weight.data[0].nelement())
+            # m.weight.data = m.weight.data.normal_(0, 1.0/c)
+            torch.nn.init.xavier_uniform_(m.weight)
+            m.bias.data.fill_(0.01)
         elif isinstance(m, nn.BatchNorm2d):
             m.weight.data = m.weight.data.zero_().add(1.0)
 
@@ -189,40 +167,6 @@ def main():
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
 
-    # # normalize = transforms.Normalize(
-    # #         meanfile=args.data+'/imagenet_mean.binaryproto')
-    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-    #                                std=[0.229, 0.224, 0.225])
-    # train_dataset = datasets.ImageFolder(
-    #     args.data,
-    #     transforms.Compose([
-    #         transforms.RandomResizedCrop(224),
-    #         transforms.RandomHorizontalFlip(),
-    #         transforms.ToTensor(),
-    #         normalize,
-    #         transforms.RandomSizedCrop(input_size),
-    #     ]),
-    #     Train=True)
-
-    # if args.distributed:
-    #     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-    # else:
-    #     train_sampler = None
-
-    # train_loader = torch.utils.data.DataLoader(
-    #     train_dataset, batch_size=args.batch_size, shuffle=False,
-    #     num_workers=args.workers, pin_memory=True, sampler=train_sampler)
-
-    # val_loader = torch.utils.data.DataLoader(
-    #     datasets.ImageFolder(args.data, transforms.Compose([
-    #         transforms.ToTensor(),
-    #         normalize,
-    #         transforms.CenterCrop(input_size),
-    #     ]),
-    #     Train=False),
-    #     batch_size=args.batch_size, shuffle=False,
-    #     num_workers=args.workers, pin_memory=True)
-
     print(model)
 
     # define the binarization operator
@@ -274,7 +218,6 @@ def train(train_loader, model, criterion, optimizer, epoch):
         target = target.cuda(async=True)
         input_var = torch.autograd.Variable(input).cuda()
         target_var = torch.autograd.Variable(target).cuda()
-        target_var = make_one_hot(target_var, 1000)
 
         # process the weights including binarization
         bin_op.binarization()
@@ -330,7 +273,7 @@ def validate(val_loader, model, criterion):
         target = target.cuda(async=True)
         input_var = torch.autograd.Variable(input, volatile=True)
         target_var = torch.autograd.Variable(target, volatile=True)
-        target_var = make_one_hot(target_var, 1000)
+        # target_var = make_one_hot(target_var, 1000)
 
         # compute output
         output = model(input_var)
