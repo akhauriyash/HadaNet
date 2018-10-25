@@ -62,47 +62,47 @@ def binFunc(input, abs_bin=False, signed_bin=False, binmat_mul=False):
         output = output.reshape(restore)
     return output
 
-class BinActive(Function):
-    @staticmethod
-    def forward(ctx, input):
-        ctx.save_for_backward(input)
-        return input.sign()
-    @staticmethod
-    def backward(ctx, grad_output):
-        input,     =    ctx.saved_tensors
-        grad_input = grad_output.clone()
-        grad_input[input.ge(1)] = 0
-        grad_input[input.le(-1)] = 0
-        return grad_input
-        
 # class BinActive(Function):
 #     @staticmethod
 #     def forward(ctx, input):
-#         output  = binFunc(input, abs_bin=True)
-#         ctx.save_for_backward(input, Variable(output))
-#         output = output.mul(input.sign())
-#         return output
+#         ctx.save_for_backward(input)
+#         return input.sign()
 #     @staticmethod
 #     def backward(ctx, grad_output):
-#         input, output      =    ctx.saved_tensors
-#         # output             =    binFunc(input, abs_bin=True)
-#         binAgg             =    4
-#         grad_input         =    grad_output.clone()
-#         g_out              =    grad_output.clone()
-#         s                  =    g_out.size()
-#         grad_input[input.le(-1.0)] = 0
-#         grad_input[input.ge( 1.0)] = 0
-#         m = output.abs().mul(grad_input)
-#         m_add = grad_output.mul(input.sign())
-#         m_add = binFunc(m_add, signed_bin=True).mul(input.sign())
-# #        if len(s) == 4:
-#  #           m_add = m_add.sum(3, keepdim=True)\
-#   #                   .sum(2, keepdim=True).sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
-#    #     elif len(s) == 2:
-#     #        m_add = m_add.sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
-#      #   m_add = m_add.mul(input.sign())
-#         m = m.add(m_add)
-#         return m
+#         input,     =    ctx.saved_tensors
+#         grad_input = grad_output.clone()
+#         grad_input[input.ge(1)] = 0
+#         grad_input[input.le(-1)] = 0
+#         return grad_input
+        
+class BinActive(Function):
+    @staticmethod
+    def forward(ctx, input):
+        output  = binFunc(input, abs_bin=True)
+        ctx.save_for_backward(input, Variable(output))
+        output = output.mul(input.sign())
+        return output
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, output      =    ctx.saved_tensors
+        # output             =    binFunc(input, abs_bin=True)
+        binAgg             =    8
+        grad_input         =    grad_output.clone()
+        g_out              =    grad_output.clone()
+        s                  =    g_out.size()
+        grad_input[input.le(-1.0)] = 0
+        grad_input[input.ge( 1.0)] = 0
+        m = output.abs().mul(grad_input)
+        m_add = grad_output.mul(input.sign())
+        # m_add = binFunc(m_add, signed_bin=True).mul(input.sign())
+       if len(s) == 4:
+           m_add = m_add.sum(3, keepdim=True)\
+                    .sum(2, keepdim=True).sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
+       elif len(s) == 2:
+           m_add = m_add.sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
+       m_add = m_add.mul(input.sign())
+        m = m.add(m_add)
+        return m
 
 
 # class BinActive(Function):
