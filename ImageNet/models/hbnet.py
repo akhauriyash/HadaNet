@@ -95,12 +95,12 @@ class BinActive(Function):
         m = output.abs().mul(grad_input)
         m_add = grad_output.mul(input.sign())
         # m_add = binFunc(m_add, signed_bin=True).mul(input.sign())
-       if len(s) == 4:
-           m_add = m_add.sum(3, keepdim=True)\
+        if len(s) == 4:
+            m_add = m_add.sum(3, keepdim=True)\
                     .sum(2, keepdim=True).sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
-       elif len(s) == 2:
-           m_add = m_add.sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
-       m_add = m_add.mul(input.sign())
+        elif len(s) == 2:
+            m_add = m_add.sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
+        m_add = m_add.mul(input.sign())
         m = m.add(m_add)
         return m
 
@@ -273,7 +273,7 @@ class HbNet(nn.Module):
         self.relu0 = nn.ReLU()
         self.mpool0= nn.MaxPool2d(kernel_size=3, stride=2)
         self.bn1   = nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=True)
-        self.conv1 = hbPass(96, 256, kernel_size=3, stride=1, padding=2)
+        self.conv1 = hbPass(96, 256, kernel_size=5, stride=1, padding=2)
         # self.relu1 = nn.ReLU()
         self.mpool1= nn.MaxPool2d(kernel_size=3, stride=2)
         self.bn2   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)

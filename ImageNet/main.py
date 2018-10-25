@@ -97,7 +97,7 @@ def main():
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().cuda()
 
-    optimizer = torch.optim.Adam(model.parameters(), args.lr,
+    optimizer = torch.optim.Adam(model.parameters(), 0.1,
                                 weight_decay=args.weight_decay)
 
     for m in model.modules():
@@ -331,7 +331,7 @@ class AverageMeter(object):
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 25 epochs"""
-    lr = args.lr * 0.001 *(0.1 ** (epoch // 25))
+    lr = args.lr *(0.1 ** (epoch // 25))
     print( 'Learning rate:', lr)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
