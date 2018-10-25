@@ -11,8 +11,10 @@ import torch.distributed as dist
 import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
+#import torchvision.transforms as transforms
+#import torchvision.datasets as datasets
+import datasets as datasets
+import datasets.transforms as transforms
 #import model_list
 from models import hbnet
 import util
@@ -127,26 +129,27 @@ def main():
     cudnn.benchmark = True
 
     # Data loading code
-#    if not os.path.exists(args.data+'/imagenet_mean.binaryproto'):
- #       print("==> Data directory"+args.data+"does not exits")
-  #      print("==> Please specify the correct data path by")
-   #     print("==>     --data <DATA_PATH>")
-    #    return
+    if not os.path.exists(args.data+'/imagenet_mean.binaryproto'):
+        print("==> Data directory"+args.data+"does not exits")
+        print("==> Please specify the correct data path by")
+        print("==>     --data <DATA_PATH>")
+        return
 
     # Data loading code
     traindir = os.path.join(args.data, 'train')
     valdir = os.path.join(args.data, 'val')
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+#    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+ #                                    std=[0.229, 0.224, 0.225])
+    normalize = transforms.Normalize(meanfile=args.data+'/imagenet_mean.binaryproto')
 
     train_dataset = datasets.ImageFolder(
         traindir,
         transforms.Compose([
-            transforms.RandomResizedCrop(227),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize,
-        ]))
+            transforms.RandomSizedCrop(input_size),
+        ]), Train=True)
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -156,16 +159,24 @@ def main():
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
-
     val_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(valdir, transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(227),
-            transforms.ToTensor(),
-            normalize,
-        ])),
-        batch_size=args.batch_size, shuffle=False,
-        num_workers=args.workers, pin_memory=True)
+                    datasets.ImageFolder(args.data, transforms.Compose([
+                    transforms.ToTensor(),
+                    normalize,
+                    transforms.CenterCrop(input_size),
+                    ]),
+                    Train=False),
+                    batch_size=args.batch_size, shuffle=False,
+                    num_workers=args.workers, pin_memory=True)
+#    val_loader = torch.utils.data.DataLoader(
+ #       datasets.ImageFolder(valdir, transforms.Compose([
+  #          transforms.Resize(256),
+   #         transforms.CenterCrop(227),
+    #        transforms.ToTensor(),
+     #       normalize,
+      #  ])),
+       # batch_size=args.batch_size, shuffle=False,
+       # num_workers=args.workers, pin_memory=True)
 
     print(model)
 
