@@ -157,7 +157,7 @@ def main():
         train_sampler = None
 
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
+        train_dataset, batch_size=192, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
     val_loader = torch.utils.data.DataLoader(
                     datasets.ImageFolder(args.data, transforms.Compose([
@@ -166,7 +166,7 @@ def main():
                     transforms.CenterCrop(input_size),
                     ]),
                     Train=False),
-                    batch_size=args.batch_size, shuffle=False,
+                    batch_size=64, shuffle=False,
                     num_workers=args.workers, pin_memory=True)
 #    val_loader = torch.utils.data.DataLoader(
  #       datasets.ImageFolder(valdir, transforms.Compose([
@@ -256,6 +256,15 @@ def train(train_loader, model, criterion, optimizer, epoch):
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
+        if i % (100*args.print_freq) == 0:
+            print("saving")
+            save_checkpoint({
+                'epoch':epoch+1,
+                'arch':args.arch,
+                'state_dict':model.state_dict(),
+                'best_prec1':best_prec1,
+                'optimizer':optimizer.state_dict(),
+                }, 0)
 
         if i % args.print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
