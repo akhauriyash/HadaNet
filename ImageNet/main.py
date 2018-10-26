@@ -282,8 +282,8 @@ def validate(val_loader, model, criterion):
     bin_op.binarization()
     for i, (input, target) in enumerate(val_loader):
         target = target.cuda(async=True)
-        input_var = torch.autograd.Variable(input, volatile=True)
-        target_var = torch.autograd.Variable(target, volatile=True)
+        input_var = torch.autograd.Variable(input, volatile=True).cuda()
+        target_var = torch.autograd.Variable(target, volatile=True).cuda()
         # target_var = make_one_hot(target_var, 1000)
 
         # compute output

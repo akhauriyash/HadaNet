@@ -15,7 +15,7 @@ from torch.nn.modules.utils import _pair
 
 
 def binFunc(input, abs_bin=False, signed_bin=False, binmat_mul=False):
-    binAgg = 8
+    binAgg = 4
     shape   = input.size()
     restore = 0
     if(len(shape)==4):
@@ -133,21 +133,21 @@ class BinOp():
     def updateBinaryGradWeight(self):
         for index in range(self.num_of_params):
             weight = self.target_modules[index].data
-            binAgg = 8
+            binAgg = 4
             n      = weight[0].nelement()
             s      = weight.size()
             m      = binFunc(weight, abs_bin=True)
             m[weight.lt(-1.0)] = 0 
             m[weight.gt(1.0)] = 0
             m      = m.mul(self.target_modules[index].grad.data)
-            # m_add  = weight.sign().mul(self.target_modules[index].grad.data)
-            # m_add  = binFunc(m_add, signed_bin=True)
+            m_add  = weight.sign().mul(self.target_modules[index].grad.data)
+            m_add  = binFunc(m_add, signed_bin=True)
             # if len(s) == 4:
             #     m_add = m_add.sum(3, keepdim=True)\
             #             .sum(2, keepdim=True).sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
             # elif len(s) == 2:
             #     m_add = m_add.sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
-            # m_add  = m_add.mul(weight.sign())
+            m_add  = m_add.mul(weight.sign())
             self.target_modules[index].grad.data = m.mul(1.0-1.0/s[1]).mul(1e+9)
 
     # def updateBinaryGradWeight(self):
