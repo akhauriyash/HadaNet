@@ -125,7 +125,7 @@ if __name__=='__main__':
     data        =    './data'
     arch        =    'hbnet'
     lr          =    0.01
-    pretrained  =    True
+    pretrained  =    False
     evaluate    =    False
 
 
@@ -237,7 +237,7 @@ if __name__=='__main__':
     # print("STOP NOW")
     # time.sleep(4) 
 
-    for epoch in range(203, 320):
+    for epoch in range(1, 320):
         if(epoch%10 == 0):
             save_state(model, optimizer, 0)
         lr = adjust_learning_rate(optimizer, epoch)
