@@ -17,6 +17,7 @@ import datasets as datasets
 import datasets.transforms as transforms
 #import model_list
 from models import hbnet
+# from models import hbnetresnet
 import util
 
 # set the seed
@@ -81,8 +82,11 @@ def main():
 
     # create model
     if args.arch=='alexnet':
-        model = hbnet.HbNet()
-        input_size = 227
+        BasicBlock = hbnet.BasicBlock
+        model = hbnet.HbNet(BasicBlock, [2, 2, 2, 2])
+        # input_size = 227
+        # model = hbnetresnet.
+        input_size = 224
     else:
         raise Exception('Model not supported yet')
 
@@ -107,7 +111,10 @@ def main():
             # c = float(m.weight.data[0].nelement())
             # m.weight.data = m.weight.data.normal_(0, 1.0/c)
             torch.nn.init.xavier_uniform_(m.weight)
-            m.bias.data.fill_(0.01)
+            try:
+                m.bias.data.fill_(0.01)
+            except:
+                pass
         elif isinstance(m, nn.BatchNorm2d):
             m.weight.data = m.weight.data.zero_().add(1.0)
 
