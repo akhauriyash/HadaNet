@@ -19,7 +19,7 @@ def angle(a, b):
     return math.degrees(math.acos(cos(a.view(1, -1),b.view(1, -1))))
 
 def binFunc(input, abs_bin=False, signed_bin=False, binmat_mul=False):
-    binAgg = 4
+    binAgg = 2
     shape   = input.size()
     # restore = 0
     if(len(shape)==4):
@@ -111,6 +111,7 @@ class BinActive(Function):
         grad_input[input.le(-1.0)] = 0
         grad_input[input.ge( 1.0)] = 0
         m = output.abs().mul(grad_input)
+
         m_add = grad_output.mul(input.sign())
         m_add = binFunc(m_add, signed_bin=True).mul(input.sign())
 #        if len(s) == 4:
@@ -120,6 +121,20 @@ class BinActive(Function):
     #        m_add = m_add.sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
      #   m_add = m_add.mul(input.sign())
         m = m.add(m_add)
+
+
+        ## Alternate algorithm
+        # m_add = input.sign().mul(grad_output)
+        # # m_add = binFunc(m_add, signed_bin=True)
+        # # if len(s) == 4:
+        # #     m_add = m_add.sum(3, keepdim=True)\
+        # #             .sum(2, keepdim=True).sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
+        # # elif len(s) == 2:
+        # #     m_add = m_add.sum(1, keepdim=True).div(m_add[0].nelement()).expand(s)
+        # temp_C = input.sign()
+        # # temp_C = binFunc(temp_C, signed_bin=True)
+        # m_add = m_add.mul(temp_C)
+        
         return m
 
 
@@ -251,7 +266,7 @@ class hbPass(nn.Module):
             #     self.bn = nn.BatchNorm1d(input_channels, eps=1e-4, momentum=0.1, affine=True)
             self.linear = nn.Linear(input_channels, output_channels)
         ##########################################################
-        self.relu = nn.ReLU(inplace = True)
+        # self.relu = nn.ReLU(inplace = True)
         ##########################################################
     def forward(self, x, kernel_size=_pair(3), dilation=_pair(1), padding=_pair(0), stride=_pair(1)):
         if not self.Linear:
@@ -274,10 +289,59 @@ class hbPass(nn.Module):
             ##########################################################
             x               =   self.linear(x)
             ##########################################################
-        x = self.relu(x)
+        # x = self.relu(x)
         return x
 
 
+class HbNet(nn.Module):
+    def __init__(self):
+        super(HbNet, self).__init__()
+        self.xnor = nn.Sequential(
+                nn.Conv2d(3, 192, kernel_size=5, stride=1, padding=2),
+                nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+                nn.ReLU(inplace=True),
+
+                nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+                hbPass(192, 160, kernel_size=1, stride=1, padding=0),
+                nn.ReLU(inplace=True),
+
+                nn.BatchNorm2d(160, eps=1e-4, momentum=0.1, affine=False),
+                hbPass(160,  96, kernel_size=1, stride=1, padding=0),
+                nn.ReLU(inplace=True),
+
+                nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+
+                nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=False),
+                hbPass( 96, 192, kernel_size=5, stride=1, padding=2, dropout=0.5),
+                nn.ReLU(inplace=True),
+
+                nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+                hbPass(192, 192, kernel_size=1, stride=1, padding=0),
+                nn.ReLU(inplace=True),
+
+                nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+                hbPass(192, 192, kernel_size=1, stride=1, padding=0),
+                nn.ReLU(inplace=True),
+
+                nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
+
+                nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+                hbPass(192, 192, kernel_size=3, stride=1, padding=1, dropout=0.5),
+                nn.ReLU(inplace=True),
+
+                nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+                hbPass(192, 192, kernel_size=1, stride=1, padding=0),
+                nn.ReLU(inplace=True),
+
+                nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+                nn.Conv2d(192, 10, kernel_size=1, stride=1, padding=0),
+                nn.ReLU(inplace=True),
+                nn.AvgPool2d(kernel_size=8, stride=1, padding=0)
+                )
+    def forward(self, x):
+        x = self.xnor(x)
+        x = x.view(x.size(0), 10)
+        return x
 '''
     For hbPass
         if Convolutional
@@ -285,71 +349,138 @@ class hbPass(nn.Module):
         if Linear
             BINACTIVE --> LINEAR --> RELU
 '''
+# class HbNet(nn.Module):
+#     def __init__(self):
+#         super(HbNet, self).__init__()
+#         self.conv0 = nn.Conv2d(3, 192, kernel_size=5, stride=1, padding=2),
+#         self.bn0 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+#         self.rl0 = nn.ReLU(inplace=True),
 
-class HbNet(nn.Module):
-    def __init__(self):
-        super(HbNet, self).__init__()
-        self.conv0 = nn.Conv2d(3, 128, kernel_size=3, stride=1, padding=1)
-        self.relu0 = nn.ReLU(inplace=True)
-        self.bn0   = nn.BatchNorm2d(128, eps=1e-4, momentum=0.1, affine=True)
-        self.conv1 = hbPass(128, 128, kernel_size=3, stride=1, padding=1)
-        self.mp1   = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.bn1   = nn.BatchNorm2d(128, eps=1e-4, momentum=0.1, affine=True)
-        self.conv2 = hbPass(128, 256, kernel_size=2, stride=1, padding=1)
-        self.bn2   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
-        self.conv3 = hbPass(256, 256, kernel_size=2, stride=1, padding=1)
-        self.mp2   = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.bn3   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
-        self.conv4 = hbPass(256, 512, kernel_size=2, stride=1, padding=1)
-        self.bn4   = nn.BatchNorm2d(512, eps=1e-4, momentum=0.1, affine=True)
-        self.conv5 = hbPass(512, 512, kernel_size=2, stride=1, padding=1)
-        self.mp3   = nn.MaxPool2d(kernel_size=2, stride=1)
-        self.bn_c2l= nn.BatchNorm2d(512, eps=1e-4, momentum=0.1, affine=True)
-        self.fc1   = hbPass(512*10*10, 1024, Linear=True, previous_conv=True, size = 10*10)
-        self.bn_l2l= nn.BatchNorm1d(1024, eps=1e-4, momentum=0.1, affine=True)
-        self.fc2   = hbPass(1024, 1024, Linear=True, previous_conv=False)
-        self.bn_l2F= nn.BatchNorm1d(1024, eps=1e-4, momentum=0.1, affine=True)
-        self.fc3   = nn.Linear(1024, 10)
-        # self.bn_out= nn.BatchNorm1d(10, eps=1e-4, momentum=0.1, affine=True)
-    def forward(self, x):
-        # for m in self.modules():
-        #     if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
-        #         if hasattr(m.weight, 'data'):
-        #             m.weight.data.clamp_(min=0.01)
-        x = self.conv0(x)
-        x = self.relu0(x)
-        x = self.bn0(x)
-        # print(x.size())
-        x = self.conv1(x)
-        x = self.mp1(x) 
-        x = self.bn1(x)
-        # print(x.size())
-        x = self.conv2(x)
-        x = self.bn2(x)
-        # print(x.size())
-        x = self.conv3(x)
-        # print(x.size())
-        x = self.mp2(x)
-        # print(x.size())
-        x = self.bn3(x)
-        x = self.conv4(x)
-        # print(x.size())
-        x = self.bn4(x)
-        # print(x.size())
-        x = self.conv5(x)
-        x = self.mp3(x)
-        # print(x.size())
-        x = self.bn_c2l(x)
-        x = self.fc1(x)
-        # print(x.size())
-        x = self.bn_l2l(x)
-        x = self.fc2(x)
-        # print(x.size())
-        x = self.bn_l2F(x)
-        x = self.fc3(x)
-        # print(x.size())
-        # x = self.bn_out(x)
-        return x
+#         self.bn1 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+#         self.conv1 = hbPass(192, 160, kernel_size=1, stride=1, padding=0),
+#         self.rl1 = nn.ReLU(inplace=True),
+
+#         self.bn2 = nn.BatchNorm2d(160, eps=1e-4, momentum=0.1, affine=False),
+#         self.conv2 = hbPass(160,  96, kernel_size=1, stride=1, padding=0),
+#         self.rl2 = nn.ReLU(inplace=True),
+
+#         self.mp0 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+
+#         self.bn3 = nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=False),
+#         self.conv3 = hbPass( 96, 192, kernel_size=5, stride=1, padding=2, dropout=0.5),
+#         self.rl3 = nn.ReLU(inplace=True),
+
+#         self.bn4 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+#         self.conv4 = hbPass(192, 192, kernel_size=1, stride=1, padding=0),
+#         self.rl4 = nn.ReLU(inplace=True),
+
+#         self.bn5 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+#         self.conv5 = hbPass(192, 192, kernel_size=1, stride=1, padding=0),
+#         self.rl5 = nn.ReLU(inplace=True),
+#         self.mp1 = nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
+
+
+#         self.bn6 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+#         self.conv6 = hbPass(192, 192, kernel_size=3, stride=1, padding=1, dropout=0.5),
+#         self.rl6 = nn.ReLU(inplace=True),
+
+#         self.bn7 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+#         self.conv7 = hbPass(192, 192, kernel_size=1, stride=1, padding=0),
+#         self.rl7 = nn.ReLU(inplace=True),
+
+#         self.bn8 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
+#         self.conv8 = nn.Conv2d(192,  10, kernel_size=1, stride=1, padding=0),
+#         self.rl8 = nn.ReLU(inplace=True),
+#         self.mp2 = nn.AvgPool2d(kernel_size=8, stride=1, padding=0),
+            
+#     def forward(self, x):
+#         x = self.rl0(self.bn0(self.conv0(x)))
+#         x = self.rl1(self.conv1(self.bn1(x)))
+#         x = self.rl2(self.conv2(self.bn2(x)))
+#         x = self.mp0(x)
+#         x = self.rl3(self.conv3(self.bn3(x)))
+#         x = self.rl4(self.conv4(self.bn4(x)))
+#         x = self.rl5(self.conv5(self.bn5(x)))
+#         x = self.mp1(x)
+#         x = self.rl6(self.conv6(self.bn6(x)))
+#         x = self.rl7(self.conv7(self.bn7(x)))
+#         x = self.rl8(self.conv8(self.bn8(x)))
+#         x = self.mp2(x)
+#         x = x.view(x.size(0), 10)
+#         return x
+
+# class HbNet(nn.Module):
+#     def __init__(self):
+#         super(HbNet, self).__init__()
+#         self.conv0 = nn.Conv2d(3, 128, kernel_size=3, stride=1, padding=1)
+#         self.relu0 = nn.ReLU(inplace=True)
+#         self.bn0   = nn.BatchNorm2d(128, eps=1e-4, momentum=0.1, affine=True)
+
+#         # self.conv1 = hbPass(128, 128, kernel_size=3, stride=1, padding=1)
+#         # self.mp1   = nn.MaxPool2d(kernel_size=2, stride=2)
+#         # self.bn1   = nn.BatchNorm2d(128, eps=1e-4, momentum=0.1, affine=True)
+#         self.conv1 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
+#         self.relu1 = nn.ReLU(inplace=True)
+#         self.mp1   = nn.MaxPool2d(kernel_size=2, stride=2)
+#         self.bn1   = nn.BatchNorm2d(128, eps=1e-4, momentum=0.1, affine=True)
+
+#         self.conv2 = hbPass(128, 256, kernel_size=2, stride=1, padding=1)
+#         self.bn2   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
+#         self.conv3 = hbPass(256, 256, kernel_size=2, stride=1, padding=1)
+#         self.mp2   = nn.MaxPool2d(kernel_size=2, stride=2)
+#         self.bn3   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
+#         self.conv4 = hbPass(256, 512, kernel_size=2, stride=1, padding=1)
+#         self.bn4   = nn.BatchNorm2d(512, eps=1e-4, momentum=0.1, affine=True)
+#         self.conv5 = hbPass(512, 512, kernel_size=2, stride=1, padding=1)
+#         self.mp3   = nn.MaxPool2d(kernel_size=2, stride=1)
+#         self.bn_c2l= nn.BatchNorm2d(512, eps=1e-4, momentum=0.1, affine=True)
+#         self.fc1   = hbPass(512*10*10, 1024, Linear=True, previous_conv=True, size = 10*10)
+#         self.bn_l2l= nn.BatchNorm1d(1024, eps=1e-4, momentum=0.1, affine=True)
+#         self.fc2   = hbPass(1024, 1024, Linear=True, previous_conv=False)
+#         self.bn_l2F= nn.BatchNorm1d(1024, eps=1e-4, momentum=0.1, affine=True)
+#         self.fc3   = nn.Linear(1024, 10)
+
+#     def forward(self, x):
+
+#         x = self.conv0(x)
+#         x = self.relu0(x)
+#         x = self.bn0(x)
+        
+
+#         x = self.conv1(x)
+#         x = self.relu1(x)
+#         x = self.mp1(x) 
+#         x = self.bn1(x)
+        
+
+        
+#         x = self.conv2(x)
+#         x = self.bn2(x)
+        
+#         x = self.conv3(x)
+        
+#         x = self.mp2(x)
+        
+#         x = self.bn3(x)
+#         x = self.conv4(x)
+        
+#         x = self.bn4(x)
+        
+#         x = self.conv5(x)
+#         x = self.mp3(x)
+        
+#         x = self.bn_c2l(x)
+#         x = self.fc1(x)
+        
+#         x = self.bn_l2l(x)
+#         x = self.fc2(x)
+        
+#         x = self.bn_l2F(x)
+#         x = self.fc3(x)
+        
+        # return x
+
+
 # model = HbNet().cuda()
 # tor = torch.randn(32, 3, 32, 32).cuda()
 # print(model(tor).size())

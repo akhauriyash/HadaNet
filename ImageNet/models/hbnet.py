@@ -272,9 +272,13 @@ class HbNet(nn.Module):
         self.bn0   = nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=True)
         self.relu0 = nn.ReLU()
         self.mpool0= nn.MaxPool2d(kernel_size=3, stride=2)
-        self.bn1   = nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=True)
-        self.conv1 = hbPass(96, 256, kernel_size=5, stride=1, padding=2)
-        # self.relu1 = nn.ReLU()
+
+        # self.bn1   = nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=True)
+        # self.conv1 = hbPass(96, 256, kernel_size=5, stride=1, padding=2)
+        self.conv1 = nn.Conv2d(96, 256, kernel_size=11, stride=4, padding=0)
+        self.bn1   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
+        self.relu1 = nn.ReLU()
+
         self.mpool1= nn.MaxPool2d(kernel_size=3, stride=2)
         self.bn2   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
         self.conv2 = hbPass(256, 384, kernel_size=3, stride=1, padding=1)
@@ -307,8 +311,14 @@ class HbNet(nn.Module):
         # print(x.size())
         x = self.mpool0(x)
         # print(x.size())
-        x = self.bn1(x)
+
+        # x = self.bn1(x)
+        # x = self.conv1(x)
+
         x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu1(x)        
+
         # print(x.size())
         # x = self.relu1(x)
         x = self.mpool1(x)

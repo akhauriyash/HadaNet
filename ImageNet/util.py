@@ -69,8 +69,8 @@ class BinOp():
         for m in model.modules():
             if isinstance(m, nn.Linear):
                 count_Lin    += 1
-
-        start_range           = 1
+        #Important
+        start_range           = 2
         end_range             = count_Lin - 2
 
         self.bin_range        = np.linspace(start_range,

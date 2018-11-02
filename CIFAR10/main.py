@@ -23,7 +23,7 @@ def save_state(model, optimizer, acc):
             'state_dict' : model.state_dict(),
             'optimizer'  : optimizer.state_dict(),
             }            
-    test=0
+    test=1
     if(test==1):
         state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
         torch.save(state, 'models/test.best.pth.tar')
@@ -94,23 +94,23 @@ def test():
 #     #     param_group['lr'] = lr_decay
     # return
 def adjust_learning_rate(optimizer, epoch):
-    if epoch < 40:
+    if epoch < 50:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.01
         return 0.01
-    elif epoch < 100:
+    elif epoch < 70:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.001
         return 0.001
-    elif epoch < 150:
+    elif epoch < 100:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.0001
         return 0.0001
-    elif epoch < 200:
+    elif epoch < 150:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.00001
         return 0.00001
-    elif epoch < 250:
+    elif epoch < 200:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.000001
         return 0.000001
@@ -200,8 +200,8 @@ if __name__=='__main__':
                 # m.weight.data.normal_(0, 0.05)
                 torch.nn.init.xavier_uniform_(m.weight)
                 m.bias.data.fill_(0.01)
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data = m.weight.data.zero_().add(1.0)
+            # elif isinstance(m, nn.BatchNorm2d):
+            #     m.weight.data = m.weight.data.zero_().add(1.0)
     ## Model loading
     else:
         print('==> Load pretrained model form', pretrained, '...')
@@ -236,6 +236,9 @@ if __name__=='__main__':
     # save_state(model, optimizer, 0)
     # print("STOP NOW")
     # time.sleep(4) 
+    # save_state(model, optimizer, 0)
+    # print("STOP NOW")
+    # time.sleep(5)
 
     for epoch in range(1, 320):
         if(epoch%10 == 0):
