@@ -82,11 +82,12 @@ def main():
 
     # create model
     if args.arch=='alexnet':
-        BasicBlock = hbnet.BasicBlock
-        model = hbnet.HbNet(BasicBlock, [2, 2, 2, 2])
-        # input_size = 227
+        # BasicBlock = hbnet.BasicBlock
+        # model = hbnet.HbNet(BasicBlock, [2, 2, 2, 2])
+        model = hbnet.HbNet()
+        input_size = 227
         # model = hbnetresnet.
-        input_size = 224
+        # input_size = 224
     else:
         raise Exception('Model not supported yet')
 
