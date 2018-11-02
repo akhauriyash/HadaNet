@@ -223,8 +223,8 @@ class hbPass(nn.Module):
         if not self.Linear:
             self.FPconv     =   nn.Conv2d(input_channels, output_channels,
                                 kernel_size=kernel_size, stride=stride, padding=padding, groups=groups)
-            self.im2col     =   Im2Col(kernel_size=_pair(kernel_size), dilation=_pair(1), padding=_pair(padding), stride=_pair(stride))
-            self.col2im     =   Col2Im(kernel_size=_pair(kernel_size), dilation=_pair(1), padding=_pair(padding), stride=_pair(stride))
+            # self.im2col     =   Im2Col(kernel_size=_pair(kernel_size), dilation=_pair(1), padding=_pair(padding), stride=_pair(stride))
+            # self.col2im     =   Col2Im(kernel_size=_pair(kernel_size), dilation=_pair(1), padding=_pair(padding), stride=_pair(stride))
             # self.bn         =   nn.BatchNorm2d(input_channels, eps=1e-4, momentum=0.1, affine=True)
         ##########################################################
         else:
@@ -240,9 +240,9 @@ class hbPass(nn.Module):
         if not self.Linear:
             # x = self.bn(x)
             ##########################################################
-            x               =   self.im2col.apply(x, _pair(kernel_size), _pair(dilation), _pair(padding), _pair(stride))
+            # x               =   self.im2col.apply(x, _pair(kernel_size), _pair(dilation), _pair(padding), _pair(stride))
             x               =   self.binactive(x)
-            x               =   self.col2im.apply(x, _pair(kernel_size), _pair(dilation), _pair(padding), _pair(stride))
+            # x               =   self.col2im.apply(x, _pair(kernel_size), _pair(dilation), _pair(padding), _pair(stride))
             if self.dropout_ratio!=0:
                 x           =   self.dropout(x)
             x               =   self.FPconv(x)
