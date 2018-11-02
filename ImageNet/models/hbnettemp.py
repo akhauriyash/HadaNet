@@ -19,7 +19,7 @@ def angle(a, b):
     return math.degrees(math.acos(cos(a.view(1, -1),b.view(1, -1))))
 
 def binFunc(input, abs_bin=False, signed_bin=False, binmat_mul=False):
-    binAgg = 2
+    binAgg = 4
     shape   = input.size()
     restore = 0
     if(len(shape)==4):
@@ -86,7 +86,7 @@ class BinActive(Function):
     def backward(ctx, grad_output):
         input, output      =    ctx.saved_tensors
         # output             =    binFunc(input, abs_bin=True)
-        binAgg             =    2
+        binAgg             =    4
         grad_input         =    grad_output.clone()
         g_out              =    grad_output.clone()
         s                  =    g_out.size()
@@ -211,7 +211,7 @@ class hbPass(nn.Module):
         self.padding        =   padding
         self.Linear         =   Linear
         self.previous_conv  =   previous_conv
-        self.binagg         =   2
+        self.binagg         =   4
         ##########################################################
         self.dropout_ratio  =   dropout
         if dropout!=0:
@@ -354,23 +354,23 @@ class HbNet(nn.Module):
         # x = self.rF(x)
         # x = self.fcf(x)
         return x
-# model = HbNet().cuda()
-# k = torch.randn(32, 3, 227, 227).cuda()
-# a = time.time()
-# print(time.time() - a)
-# print(model(k).size())
-# a = time.time()
-# print(time.time() - a)
-# print(model(k).size())
-# a = time.time()
-# print(time.time() - a)
-# print(model(k).size())
-# a = time.time()
-# print(time.time() - a)
-# print(model(k).size())
-# a = time.time()
-# print(time.time() - a)
-# print(model(k).size())
+model = HbNet().cuda()
+k = torch.randn(32, 3, 227, 227).cuda()
+a = time.time()
+print(time.time() - a)
+print(model(k).size())
+a = time.time()
+print(time.time() - a)
+print(model(k).size())
+a = time.time()
+print(time.time() - a)
+print(model(k).size())
+a = time.time()
+print(time.time() - a)
+print(model(k).size())
+a = time.time()
+print(time.time() - a)
+print(model(k).size())
 # class HbNet(nn.Module):
 #     def __init__(self):
 #         super(HbNet, self).__init__()

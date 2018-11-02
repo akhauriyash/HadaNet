@@ -230,6 +230,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
     end = time.time()
     for i, (input, target) in enumerate(train_loader):
+        a_star = time.time()
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -283,6 +284,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
                    epoch, i, len(train_loader), batch_time=batch_time,
                    data_time=data_time, loss=losses, top1=top1, top5=top5))
         gc.collect()
+        print(time.time() - a_star)
 
 
 def validate(val_loader, model, criterion):

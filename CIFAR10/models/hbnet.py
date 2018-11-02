@@ -266,7 +266,7 @@ class hbPass(nn.Module):
             #     self.bn = nn.BatchNorm1d(input_channels, eps=1e-4, momentum=0.1, affine=True)
             self.linear = nn.Linear(input_channels, output_channels)
         ##########################################################
-        # self.relu = nn.ReLU(inplace = True)
+        # self.relu = nn.PReLU(inplace = True)
         ##########################################################
     def forward(self, x, kernel_size=_pair(3), dilation=_pair(1), padding=_pair(0), stride=_pair(1)):
         if not self.Linear:
@@ -299,43 +299,43 @@ class HbNet(nn.Module):
         self.xnor = nn.Sequential(
                 nn.Conv2d(3, 192, kernel_size=5, stride=1, padding=2),
                 nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
-                nn.ReLU(inplace=True),
+                nn.PReLU(),
 
                 nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
                 hbPass(192, 160, kernel_size=1, stride=1, padding=0),
-                nn.ReLU(inplace=True),
+                nn.PReLU(),
 
                 nn.BatchNorm2d(160, eps=1e-4, momentum=0.1, affine=False),
                 hbPass(160,  96, kernel_size=1, stride=1, padding=0),
-                nn.ReLU(inplace=True),
+                nn.PReLU(),
 
                 nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
 
                 nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=False),
                 hbPass( 96, 192, kernel_size=5, stride=1, padding=2, dropout=0.5),
-                nn.ReLU(inplace=True),
+                nn.PReLU(),
 
                 nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
                 hbPass(192, 192, kernel_size=1, stride=1, padding=0),
-                nn.ReLU(inplace=True),
+                nn.PReLU(),
 
                 nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
                 hbPass(192, 192, kernel_size=1, stride=1, padding=0),
-                nn.ReLU(inplace=True),
+                nn.PReLU(),
 
                 nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
 
                 nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
                 hbPass(192, 192, kernel_size=3, stride=1, padding=1, dropout=0.5),
-                nn.ReLU(inplace=True),
+                nn.PReLU(),
 
                 nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
                 hbPass(192, 192, kernel_size=1, stride=1, padding=0),
-                nn.ReLU(inplace=True),
+                nn.PReLU(),
 
                 nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
                 nn.Conv2d(192, 10, kernel_size=1, stride=1, padding=0),
-                nn.ReLU(inplace=True),
+                nn.PReLU(),
                 nn.AvgPool2d(kernel_size=8, stride=1, padding=0)
                 )
     def forward(self, x):
@@ -354,43 +354,43 @@ class HbNet(nn.Module):
 #         super(HbNet, self).__init__()
 #         self.conv0 = nn.Conv2d(3, 192, kernel_size=5, stride=1, padding=2),
 #         self.bn0 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
-#         self.rl0 = nn.ReLU(inplace=True),
+#         self.rl0 = nn.PReLU(),
 
 #         self.bn1 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
 #         self.conv1 = hbPass(192, 160, kernel_size=1, stride=1, padding=0),
-#         self.rl1 = nn.ReLU(inplace=True),
+#         self.rl1 = nn.PReLU(),
 
 #         self.bn2 = nn.BatchNorm2d(160, eps=1e-4, momentum=0.1, affine=False),
 #         self.conv2 = hbPass(160,  96, kernel_size=1, stride=1, padding=0),
-#         self.rl2 = nn.ReLU(inplace=True),
+#         self.rl2 = nn.PReLU(),
 
 #         self.mp0 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
 
 #         self.bn3 = nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=False),
 #         self.conv3 = hbPass( 96, 192, kernel_size=5, stride=1, padding=2, dropout=0.5),
-#         self.rl3 = nn.ReLU(inplace=True),
+#         self.rl3 = nn.PReLU(),
 
 #         self.bn4 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
 #         self.conv4 = hbPass(192, 192, kernel_size=1, stride=1, padding=0),
-#         self.rl4 = nn.ReLU(inplace=True),
+#         self.rl4 = nn.PReLU(),
 
 #         self.bn5 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
 #         self.conv5 = hbPass(192, 192, kernel_size=1, stride=1, padding=0),
-#         self.rl5 = nn.ReLU(inplace=True),
+#         self.rl5 = nn.PReLU(),
 #         self.mp1 = nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
 
 
 #         self.bn6 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
 #         self.conv6 = hbPass(192, 192, kernel_size=3, stride=1, padding=1, dropout=0.5),
-#         self.rl6 = nn.ReLU(inplace=True),
+#         self.rl6 = nn.PReLU(),
 
 #         self.bn7 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
 #         self.conv7 = hbPass(192, 192, kernel_size=1, stride=1, padding=0),
-#         self.rl7 = nn.ReLU(inplace=True),
+#         self.rl7 = nn.PReLU(),
 
 #         self.bn8 = nn.BatchNorm2d(192, eps=1e-4, momentum=0.1, affine=False),
 #         self.conv8 = nn.Conv2d(192,  10, kernel_size=1, stride=1, padding=0),
-#         self.rl8 = nn.ReLU(inplace=True),
+#         self.rl8 = nn.PReLU(),
 #         self.mp2 = nn.AvgPool2d(kernel_size=8, stride=1, padding=0),
             
 #     def forward(self, x):
@@ -413,14 +413,14 @@ class HbNet(nn.Module):
 #     def __init__(self):
 #         super(HbNet, self).__init__()
 #         self.conv0 = nn.Conv2d(3, 128, kernel_size=3, stride=1, padding=1)
-#         self.relu0 = nn.ReLU(inplace=True)
+#         self.relu0 = nn.PReLU()
 #         self.bn0   = nn.BatchNorm2d(128, eps=1e-4, momentum=0.1, affine=True)
 
 #         # self.conv1 = hbPass(128, 128, kernel_size=3, stride=1, padding=1)
 #         # self.mp1   = nn.MaxPool2d(kernel_size=2, stride=2)
 #         # self.bn1   = nn.BatchNorm2d(128, eps=1e-4, momentum=0.1, affine=True)
 #         self.conv1 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
-#         self.relu1 = nn.ReLU(inplace=True)
+#         self.relu1 = nn.PReLU()
 #         self.mp1   = nn.MaxPool2d(kernel_size=2, stride=2)
 #         self.bn1   = nn.BatchNorm2d(128, eps=1e-4, momentum=0.1, affine=True)
 
@@ -488,13 +488,13 @@ class HbNet(nn.Module):
 #     def __init__(self):
 #         super(HbNet, self).__init__()
 #         '''
-#         Conv -> ReLU -> Pool -> BN -> BinActive() -> Conv -> ReLU
-#              -> MaxPool -> BN -> BinActive() -> Lin -> ReLU -> BN 
-#              -> BinActive() -> Lin -> ReLU -> BN -> Lin -> SoftMax
+#         Conv -> PReLU -> Pool -> BN -> BinActive() -> Conv -> PReLU
+#              -> MaxPool -> BN -> BinActive() -> Lin -> PReLU -> BN 
+#              -> BinActive() -> Lin -> PReLU -> BN -> Lin -> SoftMax
 #         '''
 #         # self.conv1 = nn.Conv2d(1, 20, kernel_size=5, stride=1)
 #         # self.bn_conv1 = nn.BatchNorm2d(20, eps=1e-4, momentum=0.1, affine=False)
-#         # self.relu_conv1 = nn.ReLU(inplace=True)
+#         # self.relu_conv1 = nn.PReLU()
 #         # self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
 #         # self.bin_conv2 = hbPass(20, 50, kernel_size=5, stride=1, padding=0)
 #         # self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
@@ -504,7 +504,7 @@ class HbNet(nn.Module):
 #         # self.bn_c2l = nn.BatchNorm2d(50, eps=1e-4, momentum=0.1, affine=True)
 #         # self.bn_l2l = nn.BatchNorm1d(500, eps=1e-4, momentum=0.1, affine=True)
 #         self.conv1 = nn.Conv2d(3, 6, kernel_size=5, stride=1, padding=0)
-#         self.relu  = nn.ReLU(inplace=True)
+#         self.relu  = nn.PReLU()
 #         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2) 
 #         self.bn0   = nn.BatchNorm2d(6, eps=1e-4, momentum=0.1, affine=True)
 #         self.conv2 = hbPass(6, 16, kernel_size=5, stride=1, padding=0)
