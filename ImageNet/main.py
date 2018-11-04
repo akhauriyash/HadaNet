@@ -82,12 +82,11 @@ def main():
 
     # create model
     if args.arch=='alexnet':
-        # BasicBlock = hbnet.BasicBlock
-        # model = hbnet.HbNet(BasicBlock, [2, 2, 2, 2])
-        model = hbnet.HbNet()
-        input_size = 227
-        # model = hbnetresnet.
-        # input_size = 224
+        BasicBlock = hbnet.BasicBlock
+        model = hbnet.HbNet(BasicBlock, [2, 2, 2, 2])
+        input_size = 224
+        # model = hbnet.HbNet()
+        # input_size = 227
     else:
         raise Exception('Model not supported yet')
 
@@ -165,7 +164,7 @@ def main():
         train_sampler = None
 
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=128, shuffle=(train_sampler is None),
+        train_dataset, batch_size=256, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
     val_loader = torch.utils.data.DataLoader(
                     datasets.ImageFolder(args.data, transforms.Compose([

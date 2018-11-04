@@ -19,48 +19,79 @@ def angle(a, b):
     return math.degrees(math.acos(cos(a.view(1, -1),b.view(1, -1))))
 
 def binFunc(input, abs_bin=False, signed_bin=False, binmat_mul=False):
-    binAgg = 4
+    binAgg = 2
     shape   = input.size()
-    restore = 0
+    # restore = 0
     if(len(shape)==4):
-        restore   = input.size()
-        input     = input.reshape(shape[0], -1)
+        if(shape[-1] > binAgg):
+            # restore   = input.size()
+            if(abs_bin==True):
+                listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+            elif(binmat_mul==True):
+                listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+                binmat  = input.sign()
+            elif(signed_bin==True):
+                listmat = list(torch.split(input, binAgg, dim=-1))
+            rz = listmat[-1].size(-1)
+            residualmat = torch.mean(listmat[-1], dim=-1, keepdim=True).repeat(1, 1, 1, rz)
+            listmat = torch.stack(listmat[:-1])
+            rz = listmat[0].size(-1)
+            listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, 1, 1, rz)
+            listmat = torch.cat(list(listmat), dim=-1)
+            output = torch.cat((listmat, residualmat), dim=-1)
+            if(binmat_mul==True):
+                output = output.mul(binmat)
+        else:
+            if(abs_bin==True):
+                listmat = list(input)
+            elif(binmat_mul==True):
+                listmat = list(input)
+                binmat = input.sign()
+            elif(signed_bin==True):
+                listmat = list(input)
+            listmat = torch.stack(listmat)
+            listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[-1].size(-1))
+            output = listmat
+            if(binmat_mul==True):
+                output = output.mul(binmat)
+        return output
     shape   = input.size()
     if(len(shape)==2):
         input     = input.unsqueeze(1)
-    shape   = input.size()
-    if(shape[-1] > binAgg):
-        if(abs_bin==True):
-            listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
-        elif(binmat_mul==True):
-            listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
-            binmat  = input.sign()
-        elif(signed_bin==True):
-            listmat = list(torch.split(input, binAgg, dim=-1))
-        residualmat = torch.mean(listmat[-1], dim=-1, keepdim=True).repeat(1, 1, listmat[-1].size(-1))
-        listmat = torch.stack(listmat[:-1])
-        listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
-        listmat = torch.cat(list(listmat), dim=-1)
-        output = torch.cat((listmat, residualmat), dim=-1)
-        if(binmat_mul==True):
-            output = output.mul(binmat)
-    else:
-        if(abs_bin==True):
-            listmat = list(input)
-        elif(binmat_mul==True):
-            listmat = list(input)
-            binmat = input.sign()
-        elif(signed_bin==True):
-            listmat = list(input)
-        listmat = torch.stack(listmat)
-        listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, listmat[-1].size(-1))
-        output = listmat
-        if(binmat_mul==True):
-            output = output.mul(binmat)
-    output = torch.squeeze(output)
-    if(restore!=0):
-        output = output.reshape(restore)
-    return output
+        shape   = input.size()
+        if(shape[-1] > binAgg):
+            if(abs_bin==True):
+                listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+            elif(binmat_mul==True):
+                listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+                binmat  = input.sign()
+            elif(signed_bin==True):
+                listmat = list(torch.split(input, binAgg, dim=-1))
+            residualmat = torch.mean(listmat[-1], dim=-1, keepdim=True).repeat(1, 1, listmat[-1].size(-1))
+            listmat = torch.stack(listmat[:-1])
+            listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
+            listmat = torch.cat(list(listmat), dim=-1)
+            output = torch.cat((listmat, residualmat), dim=-1)
+            if(binmat_mul==True):
+                output = output.mul(binmat)
+        else:
+            if(abs_bin==True):
+                listmat = list(input)
+            elif(binmat_mul==True):
+                listmat = list(input)
+                binmat = input.sign()
+            elif(signed_bin==True):
+                listmat = list(input)
+            listmat = torch.stack(listmat)
+            listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, listmat[-1].size(-1))
+            output = listmat
+            if(binmat_mul==True):
+                output = output.mul(binmat)
+        output = torch.squeeze(output)
+        # if(restore!=0):
+        #     output = output.reshape(restore)
+        return output
+
 
 # class BinActive(Function):
 #     @staticmethod
@@ -86,7 +117,7 @@ class BinActive(Function):
     def backward(ctx, grad_output):
         input, output      =    ctx.saved_tensors
         # output             =    binFunc(input, abs_bin=True)
-        binAgg             =    4
+        binAgg             =    2
         grad_input         =    grad_output.clone()
         g_out              =    grad_output.clone()
         s                  =    g_out.size()
@@ -211,7 +242,7 @@ class hbPass(nn.Module):
         self.padding        =   padding
         self.Linear         =   Linear
         self.previous_conv  =   previous_conv
-        self.binagg         =   4
+        self.binagg         =   2
         ##########################################################
         self.dropout_ratio  =   dropout
         if dropout!=0:
@@ -223,8 +254,8 @@ class hbPass(nn.Module):
         if not self.Linear:
             self.FPconv     =   nn.Conv2d(input_channels, output_channels,
                                 kernel_size=kernel_size, stride=stride, padding=padding, groups=groups)
-            self.im2col     =   Im2Col(kernel_size=_pair(kernel_size), dilation=_pair(1), padding=_pair(padding), stride=_pair(stride))
-            self.col2im     =   Col2Im(kernel_size=_pair(kernel_size), dilation=_pair(1), padding=_pair(padding), stride=_pair(stride))
+            # self.im2col     =   Im2Col(kernel_size=_pair(kernel_size), dilation=_pair(1), padding=_pair(padding), stride=_pair(stride))
+            # self.col2im     =   Col2Im(kernel_size=_pair(kernel_size), dilation=_pair(1), padding=_pair(padding), stride=_pair(stride))
             # self.bn         =   nn.BatchNorm2d(input_channels, eps=1e-4, momentum=0.1, affine=True)
         ##########################################################
         else:
@@ -240,9 +271,9 @@ class hbPass(nn.Module):
         if not self.Linear:
             # x = self.bn(x)
             ##########################################################
-            x               =   self.im2col.apply(x, _pair(kernel_size), _pair(dilation), _pair(padding), _pair(stride))
+            # x               =   self.im2col.apply(x, _pair(kernel_size), _pair(dilation), _pair(padding), _pair(stride))
             x               =   self.binactive(x)
-            x               =   self.col2im.apply(x, _pair(kernel_size), _pair(dilation), _pair(padding), _pair(stride))
+            # x               =   self.col2im.apply(x, _pair(kernel_size), _pair(dilation), _pair(padding), _pair(stride))
             if self.dropout_ratio!=0:
                 x           =   self.dropout(x)
             x               =   self.FPconv(x)
@@ -265,6 +296,94 @@ class hbPass(nn.Module):
         if Linear
             BINACTIVE --> LINEAR --> RELU
 '''
+# class HbNet(nn.Module):
+#     def __init__(self):
+#         super(HbNet, self).__init__()
+#         self.conv0 = nn.Conv2d(3, 96, kernel_size=11, stride=4, padding=0)
+#         self.bn0   = nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=True)
+#         self.relu0 = nn.ReLU()
+#         self.mpool0= nn.MaxPool2d(kernel_size=3, stride=2)
+
+#         # self.bn1   = nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=True)
+#         # self.conv1 = hbPass(96, 256, kernel_size=5, stride=1, padding=2)
+#         self.conv1 = nn.Conv2d(96, 256, kernel_size=11, stride=4, padding=0)
+#         self.bn1   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
+#         self.relu1 = nn.ReLU()
+
+#         self.mpool1= nn.MaxPool2d(kernel_size=3, stride=2)
+#         self.bn2   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
+#         self.conv2 = hbPass(256, 384, kernel_size=3, stride=1, padding=1)
+#         # self.relu2 = nn.ReLU()
+#         self.bn3   = nn.BatchNorm2d(384, eps=1e-4, momentum=0.1, affine=True)
+#         self.conv3 = hbPass(384, 384, kernel_size=3, stride=1, padding=1)
+#         # self.relu3 = nn.ReLU()
+#         self.bn4   = nn.BatchNorm2d(384, eps=1e-4, momentum=0.1, affine=True)
+#         self.conv4 = hbPass(384, 256, kernel_size=3, stride=1, padding=1)
+#         # self.relu4 = nn.ReLU()
+#         self.mpool4= nn.MaxPool2d(kernel_size=3, stride=2)
+#         self.bn_c2l= nn.BatchNorm1d(9216, eps=1e-4, momentum=0.1, affine=True)
+#         self.fc1   = hbPass(256*6*6, 4096, Linear=True, previous_conv=True, size=6*6)
+#         # self.frelu1= nn.ReLU() 
+#         self.dropo1= nn.Dropout(0.5)
+#         self.bn_l2l= nn.BatchNorm1d(4096, eps=1e-4, momentum=0.1, affine=True)
+#         self.fc2   = hbPass(4096, 4096, Linear=True)
+#         # self.frelu2= nn.ReLU() 
+#         self.bn_l2f= nn.BatchNorm1d(4096, eps=1e-4, momentum=0.1, affine=True)
+#         self.dropo2= nn.Dropout(0.5)
+#         self.fc3   = nn.Linear(4096, 1000)
+#         # self.rF    = nn.ReLU()
+#         # self.fcf   = nn.Linear(1000, 1)
+#         #dropout -> bn -> conv/inear -> relu
+#     def forward(self, x):
+#         # print(x.size())
+#         x = self.conv0(x)
+#         x = self.bn0(x)
+#         x = self.relu0(x)
+#         # print(x.size())
+#         x = self.mpool0(x)
+#         # print(x.size())
+#         # x = self.bn1(x)
+#         # x = self.conv1(x)
+#         x = self.conv1(x)
+#         x = self.bn1(x)
+#         x = self.relu1(x)        
+#         # print(x.size())
+#         # x = self.relu1(x)
+#         x = self.mpool1(x)
+#         # print(x.size())
+#         x = self.bn2(x)
+#         x = self.conv2(x)
+#         # print(x.size())
+#         # x = self.relu2(x)
+#         x = self.bn3(x)
+#         x = self.conv3(x)
+#         # print(x.size())
+#         # x = self.relu3(x)
+#         x = self.bn4(x)
+#         x = self.conv4(x)
+#         # print(x.size())
+#         # x = self.relu4(x)
+#         x = self.mpool4(x)
+#         # print(x.size())
+#         x = x.view(x.size(0), 256*6*6)
+#         x = self.bn_c2l(x)
+#         x = self.fc1(x)
+#         # print(x.size())
+#         # x = self.frelu1(x)
+#         x = self.dropo1(x)
+#         x = self.bn_l2l(x)
+#         x = self.fc2(x)
+#         # print(x.size())
+#         # x = self.frelu2(x)
+#         x = self.bn_l2f(x)
+#         x = self.dropo2(x)
+#         x = self.fc3(x)
+#         # print(x.size())
+#         # x = self.rF(x)
+#         # x = self.fcf(x)
+#         return x
+
+
 class HbNet(nn.Module):
     def __init__(self):
         super(HbNet, self).__init__()
@@ -272,13 +391,9 @@ class HbNet(nn.Module):
         self.bn0   = nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=True)
         self.relu0 = nn.ReLU()
         self.mpool0= nn.MaxPool2d(kernel_size=3, stride=2)
-
-        # self.bn1   = nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=True)
-        # self.conv1 = hbPass(96, 256, kernel_size=5, stride=1, padding=2)
-        self.conv1 = nn.Conv2d(96, 256, kernel_size=11, stride=4, padding=0)
-        self.bn1   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
-        self.relu1 = nn.ReLU()
-
+        self.bn1   = nn.BatchNorm2d(96, eps=1e-4, momentum=0.1, affine=True)
+        self.conv1 = hbPass(96, 256, kernel_size=5, stride=1, padding=2)
+        # self.relu1 = nn.ReLU()
         self.mpool1= nn.MaxPool2d(kernel_size=3, stride=2)
         self.bn2   = nn.BatchNorm2d(256, eps=1e-4, momentum=0.1, affine=True)
         self.conv2 = hbPass(256, 384, kernel_size=3, stride=1, padding=1)
@@ -304,53 +419,35 @@ class HbNet(nn.Module):
         # self.fcf   = nn.Linear(1000, 1)
         #dropout -> bn -> conv/inear -> relu
     def forward(self, x):
-        # print(x.size())
         x = self.conv0(x)
         x = self.bn0(x)
         x = self.relu0(x)
-        # print(x.size())
         x = self.mpool0(x)
-        # print(x.size())
-
-        # x = self.bn1(x)
-        # x = self.conv1(x)
-
-        x = self.conv1(x)
         x = self.bn1(x)
-        x = self.relu1(x)        
-
-        # print(x.size())
+        x = self.conv1(x)
         # x = self.relu1(x)
         x = self.mpool1(x)
-        # print(x.size())
         x = self.bn2(x)
         x = self.conv2(x)
-        # print(x.size())
         # x = self.relu2(x)
         x = self.bn3(x)
         x = self.conv3(x)
-        # print(x.size())
         # x = self.relu3(x)
         x = self.bn4(x)
         x = self.conv4(x)
-        # print(x.size())
         # x = self.relu4(x)
         x = self.mpool4(x)
-        # print(x.size())
         x = x.view(x.size(0), 256*6*6)
         x = self.bn_c2l(x)
         x = self.fc1(x)
-        # print(x.size())
         # x = self.frelu1(x)
         x = self.dropo1(x)
         x = self.bn_l2l(x)
         x = self.fc2(x)
-        # print(x.size())
         # x = self.frelu2(x)
         x = self.bn_l2f(x)
         x = self.dropo2(x)
         x = self.fc3(x)
-        # print(x.size())
         # x = self.rF(x)
         # x = self.fcf(x)
         return x

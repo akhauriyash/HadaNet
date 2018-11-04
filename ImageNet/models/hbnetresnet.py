@@ -19,48 +19,79 @@ def angle(a, b):
     return math.degrees(math.acos(cos(a.view(1, -1),b.view(1, -1))))
 
 def binFunc(input, abs_bin=False, signed_bin=False, binmat_mul=False):
-    binAgg = 4
+    binAgg = 2
     shape   = input.size()
-    restore = 0
+    # restore = 0
     if(len(shape)==4):
-        restore   = input.size()
-        input     = input.reshape(shape[0], -1)
+        if(shape[-1] > binAgg):
+            # restore   = input.size()
+            if(abs_bin==True):
+                listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+            elif(binmat_mul==True):
+                listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+                binmat  = input.sign()
+            elif(signed_bin==True):
+                listmat = list(torch.split(input, binAgg, dim=-1))
+            rz = listmat[-1].size(-1)
+            residualmat = torch.mean(listmat[-1], dim=-1, keepdim=True).repeat(1, 1, 1, rz)
+            listmat = torch.stack(listmat[:-1])
+            rz = listmat[0].size(-1)
+            listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, 1, 1, rz)
+            listmat = torch.cat(list(listmat), dim=-1)
+            output = torch.cat((listmat, residualmat), dim=-1)
+            if(binmat_mul==True):
+                output = output.mul(binmat)
+        else:
+            if(abs_bin==True):
+                listmat = list(input)
+            elif(binmat_mul==True):
+                listmat = list(input)
+                binmat = input.sign()
+            elif(signed_bin==True):
+                listmat = list(input)
+            listmat = torch.stack(listmat)
+            listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[-1].size(-1))
+            output = listmat
+            if(binmat_mul==True):
+                output = output.mul(binmat)
+        return output
     shape   = input.size()
     if(len(shape)==2):
         input     = input.unsqueeze(1)
-    shape   = input.size()
-    if(shape[-1] > binAgg):
-        if(abs_bin==True):
-            listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
-        elif(binmat_mul==True):
-            listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
-            binmat  = input.sign()
-        elif(signed_bin==True):
-            listmat = list(torch.split(input, binAgg, dim=-1))
-        residualmat = torch.mean(listmat[-1], dim=-1, keepdim=True).repeat(1, 1, listmat[-1].size(-1))
-        listmat = torch.stack(listmat[:-1])
-        listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
-        listmat = torch.cat(list(listmat), dim=-1)
-        output = torch.cat((listmat, residualmat), dim=-1)
-        if(binmat_mul==True):
-            output = output.mul(binmat)
-    else:
-        if(abs_bin==True):
-            listmat = list(input)
-        elif(binmat_mul==True):
-            listmat = list(input)
-            binmat = input.sign()
-        elif(signed_bin==True):
-            listmat = list(input)
-        listmat = torch.stack(listmat)
-        listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, listmat[-1].size(-1))
-        output = listmat
-        if(binmat_mul==True):
-            output = output.mul(binmat)
-    output = torch.squeeze(output)
-    if(restore!=0):
-        output = output.reshape(restore)
-    return output
+        shape   = input.size()
+        if(shape[-1] > binAgg):
+            if(abs_bin==True):
+                listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+            elif(binmat_mul==True):
+                listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+                binmat  = input.sign()
+            elif(signed_bin==True):
+                listmat = list(torch.split(input, binAgg, dim=-1))
+            residualmat = torch.mean(listmat[-1], dim=-1, keepdim=True).repeat(1, 1, listmat[-1].size(-1))
+            listmat = torch.stack(listmat[:-1])
+            listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
+            listmat = torch.cat(list(listmat), dim=-1)
+            output = torch.cat((listmat, residualmat), dim=-1)
+            if(binmat_mul==True):
+                output = output.mul(binmat)
+        else:
+            if(abs_bin==True):
+                listmat = list(input)
+            elif(binmat_mul==True):
+                listmat = list(input)
+                binmat = input.sign()
+            elif(signed_bin==True):
+                listmat = list(input)
+            listmat = torch.stack(listmat)
+            listmat = torch.mean(listmat, dim=-1, keepdim=True).repeat(1, 1, listmat[-1].size(-1))
+            output = listmat
+            if(binmat_mul==True):
+                output = output.mul(binmat)
+        output = torch.squeeze(output)
+        # if(restore!=0):
+        #     output = output.reshape(restore)
+        return output
+
 
         
 class BinActive(Function):
