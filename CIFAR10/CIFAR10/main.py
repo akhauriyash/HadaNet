@@ -168,7 +168,7 @@ if __name__=='__main__':
     # define the model
     print('==> building model ...')
     if arch    == 'hbnet':
-        model   = hbnet.HbNet()
+        model   = hbnet.HbNet(2)
     else:
         raise Exception(arch+' is currently not supported')
 
@@ -225,7 +225,7 @@ if __name__=='__main__':
         model.cuda()
         model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
     print(model)
-    bin_op = util.BinOp(model)
+    bin_op = util.BinOp(model, 8)
     if not pretrained:
         print("Skipping optimizer loading")
     else:

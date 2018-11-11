@@ -15,7 +15,7 @@ from torch.nn.modules.utils import _pair
 
 
 def binFunc(input, abs_bin=False, signed_bin=False, binmat_mul=False):
-    binAgg = 16
+    binAgg = 8
     shape   = input.size()
     restore = 0
     if(len(shape)==4):

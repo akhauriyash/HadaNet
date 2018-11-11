@@ -7,6 +7,7 @@ import sys
 import os
 import torch
 import argparse
+import data as dd
 import torchvision
 import torchvision.transforms as transforms
 import util
@@ -16,18 +17,20 @@ from models import hbnet
 from collections import OrderedDict
 from torch.autograd import Variable
 
-def save_state(model, optimizer, acc):
+def save_state(model, optimizer, acc, test=0):
     print("==> Saving model ...")
     state = {
             'acc'        : acc,
             'state_dict' : model.state_dict(),
             'optimizer'  : optimizer.state_dict(),
             }            
-    test=1
-    if(test==1):
+    tt=test
+    if(tt==1):
+        print("test save")
         state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
         torch.save(state, 'models/test.best.pth.tar')
     else:
+        print("model save")
         torch.save(state, 'models/hbnet.best.pth.tar')
 
 def train(epoch):
@@ -98,15 +101,15 @@ def adjust_learning_rate(optimizer, epoch):
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.01
         return 0.01
-    elif epoch < 70:
+    elif epoch < 90:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.001
         return 0.001
-    elif epoch < 100:
+    elif epoch < 130:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.0001
         return 0.0001
-    elif epoch < 150:
+    elif epoch < 160:
         for param_group in optimizer.param_groups:
             param_group['lr'] = 0.00001
         return 0.00001
@@ -125,7 +128,7 @@ if __name__=='__main__':
     data        =    './data'
     arch        =    'hbnet'
     lr          =    0.01
-    pretrained  =    False
+    pretrained  =    True
     evaluate    =    False
 
 
@@ -133,25 +136,32 @@ if __name__=='__main__':
     torch.manual_seed(1)
     torch.cuda.manual_seed(1)
 
-    print('==> Preparing data..')
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
+    # print('==> Preparing data..')
+    # transform_train = transforms.Compose([
+    #     transforms.RandomCrop(32, padding=4),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    # ])
 
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
+    # transform_test = transforms.Compose([
+    #     transforms.ToTensor(),
+    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    # ])
 
 
-    trainset    = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=192, shuffle=True, num_workers=2)
+    # trainset    = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
+    # trainloader = torch.utils.data.DataLoader(trainset, batch_size=192, shuffle=True, num_workers=2)
 
-    testset     = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
-    testloader  = torch.utils.data.DataLoader(testset, batch_size=192, shuffle=False, num_workers=2)
+    # testset     = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+    # testloader  = torch.utils.data.DataLoader(testset, batch_size=192, shuffle=False, num_workers=2)
+    trainset = dd.dataset(root='./data/', train=True)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=192,
+            shuffle=True, num_workers=2)
+
+    testset = dd.dataset(root='./data/', train=False)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100,
+            shuffle=False, num_workers=2)
 
     # define classes
     classes     = ('plane', 'car', 'bird', 'cat',
@@ -239,10 +249,12 @@ if __name__=='__main__':
     # save_state(model, optimizer, 0)
     # print("STOP NOW")
     # time.sleep(5)
-
-    for epoch in range(1, 320):
+    save_state(model, optimizer, 0, test=1)
+    for epoch in range(8, 320):
+        a = time.time()
         if(epoch%10 == 0):
             save_state(model, optimizer, 0)
         lr = adjust_learning_rate(optimizer, epoch)
         train(epoch)
         test()
+        print(time.time() - a)
