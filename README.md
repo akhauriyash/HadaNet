@@ -3,13 +3,8 @@
 An implementation of Hadamard Binary Neural networks in PyTorch.
 
 
-
-| Dataset  | Network                  | XNOR Net accuracy           | HBNN accuracy               | Accuracy of floating-point |
-|----------|:-------------------------|:----------------------------|:----------------------------|:---------------------------|
-| MNIST    | LeNet-5                  | 99.23%                      | 99.31%                      | 99.34%                     |
-| CIFAR-10 | Network-in-Network (NIN) | 86.28%                      | TBD                         | 89.67%                     |
-| ImageNet | AlexNet                  | Top-1: 44.87% Top-5: 69.70% | TBD                         | Top-1: 57.1% Top-5: 80.2%  |
-
+# Results
+![alt text](https://raw.githubusercontent.com/akhauriyash/HadaNet/master/results.png)
 
 # To implement (compare to XNOR-Nets)
 
