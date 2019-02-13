@@ -36,7 +36,6 @@ An implementation of Hadamard Binary Neural networks in PyTorch.
        [x] ResNet-18
        [x] AlexNet
 
-This is research in progress, the whitepaper for this can be found [here](https://docs.google.com/document/d/18uynX2yDSWm1BVCtG3Rd4CRb6xHiRxbvprUBTb4lvjY/edit?usp=sharing).
 
 # Status:
     [x] Implemented CIFAR_10 
