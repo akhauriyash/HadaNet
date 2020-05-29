@@ -7,8 +7,16 @@ import lmdb
 import caffe
 
 IMG_EXTENSIONS = [
-    '.jpg', '.JPG', '.jpeg', '.JPEG',
-    '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
+    ".jpg",
+    ".JPG",
+    ".jpeg",
+    ".JPEG",
+    ".png",
+    ".PNG",
+    ".ppm",
+    ".PPM",
+    ".bmp",
+    ".BMP",
 ]
 
 
@@ -43,15 +51,16 @@ def make_dataset(dir, class_to_idx):
 
 def pil_loader(path):
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         # with Image.open(f) as img:
         #     return img.convert('RGB')
         img = Image.open(f)
-        return img.convert('RGB')
+        return img.convert("RGB")
 
 
 def accimage_loader(path):
     import accimage
+
     try:
         return accimage.Image(path)
     except IOError:
@@ -61,7 +70,8 @@ def accimage_loader(path):
 
 def default_loader(path):
     from torchvision import get_image_backend
-    if get_image_backend() == 'accimage':
+
+    if get_image_backend() == "accimage":
         return accimage_loader(path)
     else:
         return pil_loader(path)
@@ -92,8 +102,14 @@ class ImageFolder(data.Dataset):
         imgs (list): List of (image path, class_index) tuples
     """
 
-    def __init__(self, data_path=None, transform=None, target_transform=None,
-                 loader=default_loader, Train=True):
+    def __init__(
+        self,
+        data_path=None,
+        transform=None,
+        target_transform=None,
+        loader=default_loader,
+        Train=True,
+    ):
         self.transform = transform
         self.target_transform = target_transform
         self.loader = loader
@@ -101,13 +117,13 @@ class ImageFolder(data.Dataset):
         self.Train = Train
         self.lmdb_dir = data_path
         if self.Train:
-            self.lmdb_dir = self.lmdb_dir+'/ilsvrc12_train_lmdb/'
+            self.lmdb_dir = self.lmdb_dir + "/ilsvrc12_train_lmdb/"
         else:
-            self.lmdb_dir = self.lmdb_dir+'/val/ilsvrc12_val_lmdb/'
+            self.lmdb_dir = self.lmdb_dir + "/val/ilsvrc12_val_lmdb/"
         self.lmdb_env = lmdb.open(self.lmdb_dir, readonly=True)
         self.lmdb_txn = self.lmdb_env.begin()
 
-        self.length = self.lmdb_env.stat()['entries']
+        self.length = self.lmdb_env.stat()["entries"]
 
     def __getitem__(self, index):
         """
@@ -119,7 +135,7 @@ class ImageFolder(data.Dataset):
         """
         datum = caffe.proto.caffe_pb2.Datum()
         lmdb_cursor = self.lmdb_txn.cursor()
-        key_index ='{:08}'.format(index)
+        key_index = "{:08}".format(index)
         value = lmdb_cursor.get(key_index.encode())
         datum.ParseFromString(value)
         data = caffe.io.datum_to_array(datum)

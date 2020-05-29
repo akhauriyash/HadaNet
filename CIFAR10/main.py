@@ -17,21 +17,28 @@ from models import hbnet
 from collections import OrderedDict
 from torch.autograd import Variable
 
+
 def save_state(model, optimizer, acc, test=0):
     print("==> Saving model ...")
     state = {
-            'acc'        : acc,
-            'state_dict' : model.state_dict(),
-            'optimizer'  : optimizer.state_dict(),
-            }            
-    tt=test
-    if(tt==1):
+        "acc": acc,
+        "state_dict": model.state_dict(),
+        "optimizer": optimizer.state_dict(),
+    }
+    tt = test
+    if tt == 1:
         print("test save")
-        state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
-        torch.save(state, 'models/test.best.pth.tar')
+        state["state_dict"] = OrderedDict(
+            [
+                (k.replace("module.", ""), v) if "module" in k else (k, v)
+                for k, v in state["state_dict"].items()
+            ]
+        )
+        torch.save(state, "models/test.best.pth.tar")
     else:
         print("model save")
-        torch.save(state, 'models/hbnet.best.pth.tar')
+        torch.save(state, "models/hbnet.best.pth.tar")
+
 
 def train(epoch):
     model.train()
@@ -41,49 +48,60 @@ def train(epoch):
         # Forward pass
         data, target = Variable(data.cuda()), Variable(target.cuda())
         optimizer.zero_grad()
-        output       = model(data)
+        output = model(data)
         # Backward pass
         ## L2-SVM etc.?
-        loss         = criterion(output, target)
+        loss = criterion(output, target)
         loss.backward()
         # Restore full precision weights
         bin_op.restore()
         bin_op.updateBinaryGradWeight()
         optimizer.step()
         if batch_idx % 100 == 0:
-            print('Train Epoch: {} [({:.2f}%)]\tLoss: {:.4f}\tLR: {}'.format(
-                epoch,
-                100*batch_idx / len(trainloader), loss.data[0],
-                optimizer.param_groups[0]['lr']))
+            print(
+                "Train Epoch: {} [({:.2f}%)]\tLoss: {:.4f}\tLR: {}".format(
+                    epoch,
+                    100 * batch_idx / len(trainloader),
+                    loss.data[0],
+                    optimizer.param_groups[0]["lr"],
+                )
+            )
     return
+
 
 def test():
     global best_acc
     model.eval()
     test_loss = 0
-    correct   = 0
+    correct = 0
     bin_op.binarization()
     for data, target in testloader:
         data, target = Variable(data.cuda()), Variable(target.cuda())
-        output       = model(data)
-        test_loss   += criterion(output, target).data[0]
-        pred         = output.data.max(1, keepdim=True)[1]
-        correct     += pred.eq(target.data.view_as(pred)).cpu().sum()
-    correct          = float(correct)
+        output = model(data)
+        test_loss += criterion(output, target).data[0]
+        pred = output.data.max(1, keepdim=True)[1]
+        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+    correct = float(correct)
     bin_op.restore()
-    acc              = 100*float(correct)/float(len(testloader.dataset))
-    test_loss       /= len(testloader.dataset)
+    acc = 100 * float(correct) / float(len(testloader.dataset))
+    test_loss /= len(testloader.dataset)
 
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({}%)'.format(
-        test_loss , correct, len(testloader.dataset),
-        100*float(correct)/float(len(testloader.dataset))))
-    
-    print('Best Accuracy: {}%\n'.format(float(best_acc)))
+    print(
+        "\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({}%)".format(
+            test_loss,
+            correct,
+            len(testloader.dataset),
+            100 * float(correct) / float(len(testloader.dataset)),
+        )
+    )
+
+    print("Best Accuracy: {}%\n".format(float(best_acc)))
 
     if acc > best_acc:
-        best_acc     = acc
+        best_acc = acc
         save_state(model, optimizer, best_acc)
     return
+
 
 # def adjust_learning_rate(optimizer, epoch):
 #     update_list = [60, 120, 200, 240, 280]
@@ -95,42 +113,42 @@ def test():
 #     # lr_decay = (lr_fin/lr_start)**(1./epoch)
 #     # for param_group in optimizer.param_groups:
 #     #     param_group['lr'] = lr_decay
-    # return
+# return
 def adjust_learning_rate(optimizer, epoch):
     if epoch < 50:
         for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.01
+            param_group["lr"] = 0.01
         return 0.01
     elif epoch < 90:
         for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.001
+            param_group["lr"] = 0.001
         return 0.001
     elif epoch < 130:
         for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.0001
+            param_group["lr"] = 0.0001
         return 0.0001
     elif epoch < 160:
         for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.00001
+            param_group["lr"] = 0.00001
         return 0.00001
     elif epoch < 200:
         for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.000001
+            param_group["lr"] = 0.000001
         return 0.000001
     else:
         for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.0000001
+            param_group["lr"] = 0.0000001
         return 0.0000001
-    return 
+    return
 
-if __name__=='__main__':
-    cpu         =    False
-    data        =    './data'
-    arch        =    'hbnet'
-    lr          =    0.01
-    pretrained  =    True
-    evaluate    =    False
 
+if __name__ == "__main__":
+    cpu = False
+    data = "./data"
+    arch = "hbnet"
+    lr = 0.01
+    pretrained = True
+    evaluate = False
 
     # Seed for reproducibility
     torch.manual_seed(1)
@@ -149,55 +167,64 @@ if __name__=='__main__':
     #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     # ])
 
-
     # trainset    = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
     # trainloader = torch.utils.data.DataLoader(trainset, batch_size=192, shuffle=True, num_workers=2)
 
     # testset     = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
     # testloader  = torch.utils.data.DataLoader(testset, batch_size=192, shuffle=False, num_workers=2)
-    trainset = dd.dataset(root='./data/', train=True)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=192,
-            shuffle=True, num_workers=2)
+    trainset = dd.dataset(root="./data/", train=True)
+    trainloader = torch.utils.data.DataLoader(
+        trainset, batch_size=192, shuffle=True, num_workers=2
+    )
 
-    testset = dd.dataset(root='./data/', train=False)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100,
-            shuffle=False, num_workers=2)
+    testset = dd.dataset(root="./data/", train=False)
+    testloader = torch.utils.data.DataLoader(
+        testset, batch_size=100, shuffle=False, num_workers=2
+    )
 
     # define classes
-    classes     = ('plane', 'car', 'bird', 'cat',
-                'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+    classes = (
+        "plane",
+        "car",
+        "bird",
+        "cat",
+        "deer",
+        "dog",
+        "frog",
+        "horse",
+        "ship",
+        "truck",
+    )
     # define the model
-    print('==> building model ...')
-    if arch    == 'hbnet':
-        model   = hbnet.HbNet()
+    print("==> building model ...")
+    if arch == "hbnet":
+        model = hbnet.HbNet()
     else:
-        raise Exception(arch+' is currently not supported')
+        raise Exception(arch + " is currently not supported")
 
-    base_lr     = float(lr)
-    param_dict  = dict(model.named_parameters())
-    params      = []
+    base_lr = float(lr)
+    param_dict = dict(model.named_parameters())
+    params = []
 
     for key, value in param_dict.items():
-        params += [{'params'      : [value],
-                    'lr'          : base_lr,
-                    'weight_decay': 0.00001}]
+        params += [{"params": [value], "lr": base_lr, "weight_decay": 0.00001}]
     # optimizer = optim.SGD(params, lr=.1, momentum=0.9, nesterov=True)
     optimizer = optim.Adam(params, lr=0.1, weight_decay=0.00001)
     # optimizer = torch.optim.Adagrad(params, lr=1.0, rho=0.9, eps=1e-06, weight_decay=1e-5)
 
-    criterion   = nn.CrossEntropyLoss()
-  #  acc = 88.27
-  #  state = {
-  #                      'acc'        : acc,
-  #                                  'state_dict' : model.state_dict(),
-  #                                              'optimizer'  : optimizer.state_dict(),
-  #                                                          }            
-  #  state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
-  #  torch.save(state, 'models/test.best.pth.tar')
+    criterion = nn.CrossEntropyLoss()
+    #  acc = 88.27
+    #  state = {
+    #                      'acc'        : acc,
+    #                                  'state_dict' : model.state_dict(),
+    #                                              'optimizer'  : optimizer.state_dict(),
+    #                                                          }
+    #  state['state_dict'] = OrderedDict([(k.replace('module.', ''), v) if 'module' in k else (k,v) for k, v in state['state_dict'].items()])
+    #  torch.save(state, 'models/test.best.pth.tar')
 
     ## MODEL INITIALIZATION
     if not pretrained:
-        print('==> Initializing model parameters ...')
+        print("==> Initializing model parameters ...")
         best_acc = 0
         # for m in model.modules():
         #     if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
@@ -214,45 +241,47 @@ if __name__=='__main__':
             #     m.weight.data = m.weight.data.zero_().add(1.0)
     ## Model loading
     else:
-        print('==> Load pretrained model form', pretrained, '...')
-        pmod2 = torch.load('models/hbnet.best.pth.tar')
-        pmod  = torch.load('models/test.best.pth.tar')
-        for key, value in pmod2['state_dict'].items():
-            pmod['state_dict'][key[7:]] = value
-        model.load_state_dict(pmod['state_dict'])
-        best_acc = pmod['acc']
+        print("==> Load pretrained model form", pretrained, "...")
+        pmod2 = torch.load("models/hbnet.best.pth.tar")
+        pmod = torch.load("models/test.best.pth.tar")
+        for key, value in pmod2["state_dict"].items():
+            pmod["state_dict"][key[7:]] = value
+        model.load_state_dict(pmod["state_dict"])
+        best_acc = pmod["acc"]
 
     if not cpu:
         model.cuda()
-        model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
+        model = torch.nn.DataParallel(
+            model, device_ids=range(torch.cuda.device_count())
+        )
     print(model)
     bin_op = util.BinOp(model)
     if not pretrained:
         print("Skipping optimizer loading")
     else:
-      pass
+        pass
         #  optimizer.load_state_dict(pmod2['optimizer'])
-      #  for state in optimizer.state.values():
-      #      for k, v in state.items():
-      #          if isinstance(v, torch.Tensor):
-      #              state[k] = v.to('cuda')
-  #  save_state(model, optimizer, 0)
- #   print("roko BC")
-#    time.sleep(5)
+        #  for state in optimizer.state.values():
+        #      for k, v in state.items():
+        #          if isinstance(v, torch.Tensor):
+        #              state[k] = v.to('cuda')
+    #  save_state(model, optimizer, 0)
+    #   print("roko BC")
+    #    time.sleep(5)
     if evaluate:
         test()
         exit(0)
     # print("SAVING")
     # save_state(model, optimizer, 0)
     # print("STOP NOW")
-    # time.sleep(4) 
+    # time.sleep(4)
     # save_state(model, optimizer, 0)
     # print("STOP NOW")
     # time.sleep(5)
     save_state(model, optimizer, 0, test=1)
     for epoch in range(8, 320):
         a = time.time()
-        if(epoch%10 == 0):
+        if epoch % 10 == 0:
             save_state(model, optimizer, 0)
         lr = adjust_learning_rate(optimizer, epoch)
         train(epoch)

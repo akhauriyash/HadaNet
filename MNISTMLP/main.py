@@ -165,11 +165,11 @@ if __name__=='__main__':
     else:
            optimizer.load_state_dict(pmod2['optimizer'])
        
-       if evaluate:
-           test()
-           exit(0)
+        if evaluate:
+            test()
+            exit(0)
 
-       for epoch in range(0, 320):
+        for epoch in range(0, 320):
            adjust_learning_rate(optimizer, epoch)
            train(epoch)
            test(optimizer)

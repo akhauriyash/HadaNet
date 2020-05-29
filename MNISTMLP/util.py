@@ -15,97 +15,110 @@ from torch.nn.modules.utils import _pair
 
 
 def binabs(input):
-    binAgg          =   16
-    shape           =   input.size()
-    restore         =   0
-    if(len(shape)  == 4):
-        restore     =   input.size()
-        input       =   input.reshape(shape[0], -1)
-    shape           =   input.size()
-    if(len(shape)  == 2): 
-        input       =   input.unsqueeze(1)
-    shape           =   input.size()
-    if(shape[-1] > binAgg):
-        binmat      =   input.sign()
-        listmat     =   list(torch.split(torch.abs(input), binAgg, dim=-1))
-        residualmat =   listmat[-1]
-        splitup     =   torch.stack(listmat[:-1])
-        stackmat    =   torch.mean(splitup, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
-        residualmat =   torch.mean(residualmat, dim=-1, keepdim=True).repeat(1, 1, residualmat.size(-1))
-        z           =   list(stackmat)
-        stackmat    =   torch.cat(z, dim=-1)
-        output      =   torch.cat((stackmat, residualmat), dim=-1)
-        output      =   torch.squeeze(output.mul(binmat))
+    binAgg = 16
+    shape = input.size()
+    restore = 0
+    if len(shape) == 4:
+        restore = input.size()
+        input = input.reshape(shape[0], -1)
+    shape = input.size()
+    if len(shape) == 2:
+        input = input.unsqueeze(1)
+    shape = input.size()
+    if shape[-1] > binAgg:
+        binmat = input.sign()
+        listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+        residualmat = listmat[-1]
+        splitup = torch.stack(listmat[:-1])
+        stackmat = torch.mean(splitup, dim=-1, keepdim=True).repeat(
+            1, 1, 1, listmat[0].size(-1)
+        )
+        residualmat = torch.mean(residualmat, dim=-1, keepdim=True).repeat(
+            1, 1, residualmat.size(-1)
+        )
+        z = list(stackmat)
+        stackmat = torch.cat(z, dim=-1)
+        output = torch.cat((stackmat, residualmat), dim=-1)
+        output = torch.squeeze(output.mul(binmat))
     else:
-        binmat      = input.sign()
-        listmat     =   list(torch.split(torch.abs(input), binAgg, dim=-1))
-        splitup     =   torch.stack(listmat)
-        stackmat    =   torch.mean(splitup, dim=-1, keepdim=False).repeat(1, 1, 1, listmat[0].size(-1))
-        z           =   list(stackmat)
-        output      =   torch.cat(z, dim=-1)
-        output      =   torch.squeeze(output) 
-        output      = torch.squeeze(output.mul(binmat))
-    if(restore != 0):
-        output      =   output.reshape(restore)
+        binmat = input.sign()
+        listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+        splitup = torch.stack(listmat)
+        stackmat = torch.mean(splitup, dim=-1, keepdim=False).repeat(
+            1, 1, 1, listmat[0].size(-1)
+        )
+        z = list(stackmat)
+        output = torch.cat(z, dim=-1)
+        output = torch.squeeze(output)
+        output = torch.squeeze(output.mul(binmat))
+    if restore != 0:
+        output = output.reshape(restore)
     return output
 
 
 def bingradupd(input):
-    binAgg          =   16
-    shape           =   input.size()
-    restore         =   0
-    if(len(shape)  == 4):
-        restore     =   input.size()
-        input       =   input.reshape(shape[0], -1)
-    shape           =   input.size()
-    if(len(shape)  == 2): 
-        input       =   input.unsqueeze(1)
-    shape           =   input.size()
-    if(shape[-1] > binAgg):
-        listmat     =   list(torch.split(torch.abs(input), binAgg, dim=-1))
-        residualmat =   listmat[-1]
-        splitup     =   torch.stack(listmat[:-1])
-        stackmat    =   torch.mean(splitup, dim=-1, keepdim=True).repeat(1, 1, 1, listmat[0].size(-1))
-        residualmat =   torch.mean(residualmat, dim=-1, keepdim=True).repeat(1, 1, residualmat.size(-1))
-        z           =   list(stackmat)
-        stackmat    =   torch.cat(z, dim=-1)
-        output      =   torch.cat((stackmat, residualmat), dim=-1)
+    binAgg = 16
+    shape = input.size()
+    restore = 0
+    if len(shape) == 4:
+        restore = input.size()
+        input = input.reshape(shape[0], -1)
+    shape = input.size()
+    if len(shape) == 2:
+        input = input.unsqueeze(1)
+    shape = input.size()
+    if shape[-1] > binAgg:
+        listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+        residualmat = listmat[-1]
+        splitup = torch.stack(listmat[:-1])
+        stackmat = torch.mean(splitup, dim=-1, keepdim=True).repeat(
+            1, 1, 1, listmat[0].size(-1)
+        )
+        residualmat = torch.mean(residualmat, dim=-1, keepdim=True).repeat(
+            1, 1, residualmat.size(-1)
+        )
+        z = list(stackmat)
+        stackmat = torch.cat(z, dim=-1)
+        output = torch.cat((stackmat, residualmat), dim=-1)
     else:
-        listmat     =   list(torch.split(torch.abs(input), binAgg, dim=-1))
-        splitup     =   torch.stack(listmat)
-        stackmat    =   torch.mean(splitup, dim=-1, keepdim=False).repeat(1, 1, 1, listmat[0].size(-1))
-        z           =   list(stackmat)
-        output      =   torch.cat(z, dim=-1)
-    output          =   torch.squeeze(output) 
-    if(restore != 0):
-        output      =   output.reshape(restore)
+        listmat = list(torch.split(torch.abs(input), binAgg, dim=-1))
+        splitup = torch.stack(listmat)
+        stackmat = torch.mean(splitup, dim=-1, keepdim=False).repeat(
+            1, 1, 1, listmat[0].size(-1)
+        )
+        z = list(stackmat)
+        output = torch.cat(z, dim=-1)
+    output = torch.squeeze(output)
+    if restore != 0:
+        output = output.reshape(restore)
     return output
 
 
-class BinOp():
+class BinOp:
     def __init__(self, model):
         count_Layers = 0
         for m in model.modules():
             if isinstance(m, nn.Conv2d) or isintance(m, nn.Linear):
                 count_Layers += 1
-        start_range           = 1
-        end_range             = count_Layers-2
-        self.bin_range        = np.linspace(start_range,
-                end_range, end_range-start_range+1)\
-                                .astype('int').tolist()
-        self.num_of_params    = len(self.bin_range)
-        self.saved_params     = []
-        self.target_params    = []
-        self.target_modules   = []
-        index                 = -1
+        start_range = 1
+        end_range = count_Layers - 2
+        self.bin_range = (
+            np.linspace(start_range, end_range, end_range - start_range + 1)
+            .astype("int")
+            .tolist()
+        )
+        self.num_of_params = len(self.bin_range)
+        self.saved_params = []
+        self.target_params = []
+        self.target_modules = []
+        index = -1
         for m in model.modules():
             if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
-                index          += 1
+                index += 1
                 if index in self.bin_range:
-                    tmp       = m.weight.data.clone()
+                    tmp = m.weight.data.clone()
                     self.saved_params.append(tmp)
                     self.target_modules.append(m.weight)
-
 
     def binarization(self):
         self.meanCenterConvParams()
@@ -113,67 +126,62 @@ class BinOp():
         self.save_params()
         self.binarizeConvParams()
 
-
     def meanCenterConvParams(self):
         for index in range(self.num_of_params):
-            s       = self.target_modules[index].data.size()
-            negMean = self.target_modules[index].data.mean(1, keepdim=True).\
-                    mul(-1).expand_as(self.target_modules[index].data)
-            self.target_modules[index].data = self.target_modules[index].data.add(negMean)
-    
+            s = self.target_modules[index].data.size()
+            negMean = (
+                self.target_modules[index]
+                .data.mean(1, keepdim=True)
+                .mul(-1)
+                .expand_as(self.target_modules[index].data)
+            )
+            self.target_modules[index].data = self.target_modules[index].data.add(
+                negMean
+            )
 
     def clampConvParams(self):
         for index in range(self.num_of_params):
-            self.target_modules[index].data = \
-                    self.target_modules[index].data.clamp(-1.0, 1.0)
-
+            self.target_modules[index].data = self.target_modules[index].data.clamp(
+                -1.0, 1.0
+            )
 
     def save_params(self):
         for index in range(self.num_of_params):
             self.saved_params[index].copy_(self.target_modules[index].data)
 
-
     def binarizeConvParams(self):
         for index in range(self.num_of_params):
-            n      =   self.target_modules[index].data[0].nelement()
-            s      =   self.target_modules[index].data.size()
-            m      =   binabs(self.target_modules[index].data)
+            n = self.target_modules[index].data[0].nelement()
+            s = self.target_modules[index].data.size()
+            m = binabs(self.target_modules[index].data)
             self.target_modules[index].data = m
 
- 
     def restore(self):
         for index in range(self.num_of_params):
             self.target_modules[index].data.copy_(self.saved_params[index])
-
 
     def updateBinaryGradWeight(self):
         for index in range(self.num_of_params):
             weight = self.target_modules[index].data
             binAgg = 16
-            n      = weight[0].nelement()
-            s 	   = weight.size()
-            m      = bingradupd(weight)
-            m[weight.lt(-1.0)] = 0 
+            n = weight[0].nelement()
+            s = weight.size()
+            m = bingradupd(weight)
+            m[weight.lt(-1.0)] = 0
             m[weight.gt(1.0)] = 0
-            m      = m.mul(self.target_modules[index].grad.data)
-            m_add  = weight.sign().mul(self.target_modules[index].grad.data)
-            m_add  = m_add.sum(3, keepdim=True)\
-                    .sum(2, keepdim=True).sum(1, keepdim=True).div(binAgg).expand(s)
-            m_add  = m_add.mul(weight.sign())
-            self.target_modules[index].grad.data = m.add(m_add).mul(1.0-1.0/s[1]).mul(1e+8)
-
-
-
-
-
-
-
-
-
-
-
-
-
+            m = m.mul(self.target_modules[index].grad.data)
+            m_add = weight.sign().mul(self.target_modules[index].grad.data)
+            m_add = (
+                m_add.sum(3, keepdim=True)
+                .sum(2, keepdim=True)
+                .sum(1, keepdim=True)
+                .div(binAgg)
+                .expand(s)
+            )
+            m_add = m_add.mul(weight.sign())
+            self.target_modules[index].grad.data = (
+                m.add(m_add).mul(1.0 - 1.0 / s[1]).mul(1e8)
+            )
 
 
 # def binabs(input):
@@ -184,7 +192,7 @@ class BinOp():
 #         restore     =   input.size()
 #         input       =   input.reshape(shape[0], -1)
 #     shape           =   input.size()
-#     if(len(shape)==2): 
+#     if(len(shape)==2):
 #         input       =   input.unsqueeze(1)
 #     shape = input.size()
 #     if(shape[-1] > binAgg):
@@ -206,7 +214,7 @@ class BinOp():
 #         z = list(stackmat)
 #         output = torch.cat(z, dim=-1)
 #         output = torch.squeeze(output.mul(binmat))
-#     output = torch.squeeze(output) 
+#     output = torch.squeeze(output)
 #     if(restore!=0):
 #         output = output.reshape(restore)
 #     return output

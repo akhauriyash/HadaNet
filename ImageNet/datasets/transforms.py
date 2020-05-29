@@ -4,6 +4,7 @@ import torch
 import math
 import random
 from PIL import Image, ImageOps
+
 try:
     import accimage
 except ImportError:
@@ -55,6 +56,7 @@ class ToTensor(object):
             # backward compatibility
             return img.float()
 
+
 class Normalize(object):
     """Normalize an tensor image with mean and standard deviation.
 
@@ -70,11 +72,11 @@ class Normalize(object):
         if mean:
             self.mean = mean
         else:
-            data = open(meanfile, 'rb').read()
+            data = open(meanfile, "rb").read()
             blob = caffe.proto.caffe_pb2.BlobProto()
             blob.ParseFromString(data)
             arr = np.array(caffe.io.blobproto_to_array(blob))
-            self.mean = torch.from_numpy(arr[0].astype('float32'))
+            self.mean = torch.from_numpy(arr[0].astype("float32"))
 
     def __call__(self, tensor):
         """
@@ -104,7 +106,9 @@ class Scale(object):
     """
 
     def __init__(self, size, interpolation=Image.BILINEAR):
-        assert isinstance(size, int) or (isinstance(size, collections.Iterable) and len(size) == 2)
+        assert isinstance(size, int) or (
+            isinstance(size, collections.Iterable) and len(size) == 2
+        )
         self.size = size
         self.interpolation = interpolation
 
@@ -114,9 +118,10 @@ class Scale(object):
             img (PIL.Image): Image to be scaled.
 
         """
-        assert(img.shape[1]==self.size)
-        assert(img.shape[2]==self.size)
+        assert img.shape[1] == self.size
+        assert img.shape[2] == self.size
         return img
+
 
 class CenterCrop(object):
     """Crops the given PIL.Image at the center.
@@ -143,9 +148,9 @@ class CenterCrop(object):
         """
         w, h = (img.shape[1], img.shape[2])
         th, tw = self.size
-        w_off = int((w - tw) / 2.)
-        h_off = int((h - th) / 2.)
-        img = img[:, h_off:h_off+th, w_off:w_off+tw]
+        w_off = int((w - tw) / 2.0)
+        h_off = int((h - th) / 2.0)
+        img = img[:, h_off : h_off + th, w_off : w_off + tw]
         return img
 
 
@@ -160,7 +165,11 @@ class Pad(object):
 
     def __init__(self, padding, fill=0):
         assert isinstance(padding, numbers.Number)
-        assert isinstance(fill, numbers.Number) or isinstance(fill, str) or isinstance(fill, tuple)
+        assert (
+            isinstance(fill, numbers.Number)
+            or isinstance(fill, str)
+            or isinstance(fill, tuple)
+        )
         self.padding = padding
         self.fill = fill
 
@@ -265,7 +274,7 @@ class RandomSizedCrop(object):
         self.interpolation = interpolation
 
     def __call__(self, img):
-        h_off = random.randint(0, img.shape[1]-self.size)
-        w_off = random.randint(0, img.shape[2]-self.size)
-        img = img[:, h_off:h_off+self.size, w_off:w_off+self.size]
+        h_off = random.randint(0, img.shape[1] - self.size)
+        w_off = random.randint(0, img.shape[2] - self.size)
+        img = img[:, h_off : h_off + self.size, w_off : w_off + self.size]
         return img
